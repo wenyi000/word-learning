@@ -554,6 +554,12 @@
     <input type="file" id="dictFile" accept=".json,.csv,.txt" onchange="importDictionary(this.files[0])">
     <div id="dictionaryInfo" style="margin-top:8px;font-size:13px;color:#666;">未加载本地字典</div>
     <div class="tip" style="margin-top:8px;">支持 JSON、CSV、TXT；导入后输入单词会自动带出音标和释义</div>
+    <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
+    <label>牛津完整字典</label>
+    <div id="fullDictInfo" style="margin-bottom:8px;font-size:13px;color:#666;">未加载</div>
+    <button class="btn-secondary" id="loadFullDictBtn" onclick="loadFullDictionaryFromNetwork()">加载完整字典</button>
+    <button class="btn-warning hidden" id="unloadFullDictBtn" onclick="unloadFullDictionary()">卸载完整字典</button>
+    <div class="tip" style="margin-top:8px;">加载后约有 9 万个单词，首次下载约 10MB，之后自动缓存在浏览器中</div>
   </div>
 
   <div class="card">
@@ -783,10 +789,18 @@
     }
 
     async function resolveWordInfo(word) {
+      // 1. 用户手动导入的本地字典
       const local = lookupDictionary(word);
       if (local && (local.phonetic || local.meaning)) return local;
+
+      // 2. IndexedDB 中的完整牛津字典
+      const full = await lookupFullDictionary(word);
+      if (full && (full.phonetic || full.meaning)) return full;
+
+      // 3. 在线 API
       const online = await fetchOnlineDictionary(word);
       if (online) return online;
+
       return { phonetic: '', meaning: '' };
     }
 
@@ -883,6 +897,147 @@
       if (el) {
         const count = Object.keys(state.dictionary).length;
         el.textContent = count > 0 ? `已加载 ${count} 个单词` : '未加载本地字典';
+      }
+    }
+
+    // ============== 完整字典（IndexedDB） ==============
+
+    const DICT_DB_NAME = 'wordLearningDictDB_v1';
+    const DICT_STORE_NAME = 'dictionary';
+    const DICT_KEY = 'oxford';
+    const DICT_CHUNK_COUNT = 10;
+    const DICT_CHUNK_BASE = 'https://wenyi000.github.io/word-learning/dictionary_';
+    let fullDictionaryCache = null;
+
+    function openDictDB() {
+      return new Promise((resolve, reject) => {
+        if (!('indexedDB' in window)) {
+          reject(new Error('浏览器不支持 IndexedDB'));
+          return;
+        }
+        const req = indexedDB.open(DICT_DB_NAME, 1);
+        req.onerror = () => reject(req.error);
+        req.onsuccess = () => resolve(req.result);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(DICT_STORE_NAME)) {
+            db.createObjectStore(DICT_STORE_NAME);
+          }
+        };
+      });
+    }
+
+    async function saveFullDictionary(dict) {
+      const db = await openDictDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(DICT_STORE_NAME, 'readwrite');
+        const store = tx.objectStore(DICT_STORE_NAME);
+        const req = store.put(dict, DICT_KEY);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+        tx.oncomplete = () => { db.close(); };
+      });
+    }
+
+    async function loadFullDictionaryFromDB() {
+      if (fullDictionaryCache) return fullDictionaryCache;
+      const db = await openDictDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(DICT_STORE_NAME, 'readonly');
+        const store = tx.objectStore(DICT_STORE_NAME);
+        const req = store.get(DICT_KEY);
+        req.onsuccess = () => {
+          fullDictionaryCache = req.result || null;
+          resolve(fullDictionaryCache);
+        };
+        req.onerror = () => reject(req.error);
+        tx.oncomplete = () => { db.close(); };
+      });
+    }
+
+    async function clearFullDictionaryFromDB() {
+      fullDictionaryCache = null;
+      const db = await openDictDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(DICT_STORE_NAME, 'readwrite');
+        const store = tx.objectStore(DICT_STORE_NAME);
+        const req = store.delete(DICT_KEY);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+        tx.oncomplete = () => { db.close(); };
+      });
+    }
+
+    async function lookupFullDictionary(word) {
+      const dict = await loadFullDictionaryFromDB();
+      if (!dict) return null;
+      const key = word.trim().toLowerCase();
+      return dict[key] || null;
+    }
+
+    async function loadFullDictionaryFromNetwork() {
+      const btn = document.getElementById('loadFullDictBtn');
+      const info = document.getElementById('fullDictInfo');
+      try {
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = '正在下载字典...';
+        }
+        const merged = {};
+        for (let i = 0; i < DICT_CHUNK_COUNT; i++) {
+          if (info) info.textContent = `正在下载第 ${i + 1}/${DICT_CHUNK_COUNT} 部分...`;
+          const url = `${DICT_CHUNK_BASE}${i}.json?nocache=${Date.now()}`;
+          const resp = await fetch(url);
+          if (!resp.ok) throw new Error(`第 ${i + 1} 部分下载失败：${resp.status}`);
+          const chunk = await resp.json();
+          Object.assign(merged, chunk);
+          if (info) info.textContent = `已下载 ${Object.keys(merged).length} 个单词...`;
+        }
+        if (info) info.textContent = `正在保存 ${Object.keys(merged).length} 个单词...`;
+        await saveFullDictionary(merged);
+        fullDictionaryCache = merged;
+        renderFullDictInfo();
+        alert(`完整字典加载成功，共 ${Object.keys(merged).length} 个单词`);
+      } catch (e) {
+        console.error(e);
+        alert('加载完整字典失败：' + e.message);
+        if (info) info.textContent = '加载失败';
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '加载完整字典';
+        }
+      }
+    }
+
+    async function unloadFullDictionary() {
+      if (!confirm('确定要卸载完整字典吗？需要重新下载才能使用。')) return;
+      await clearFullDictionaryFromDB();
+      renderFullDictInfo();
+      alert('已卸载完整字典');
+    }
+
+    async function renderFullDictInfo() {
+      const el = document.getElementById('fullDictInfo');
+      const loadBtn = document.getElementById('loadFullDictBtn');
+      const unloadBtn = document.getElementById('unloadFullDictBtn');
+      if (!el) return;
+      try {
+        const dict = await loadFullDictionaryFromDB();
+        if (dict) {
+          const count = Object.keys(dict).length;
+          el.textContent = `已加载 ${count} 个单词`;
+          if (loadBtn) loadBtn.classList.add('hidden');
+          if (unloadBtn) unloadBtn.classList.remove('hidden');
+        } else {
+          el.textContent = '未加载';
+          if (loadBtn) loadBtn.classList.remove('hidden');
+          if (unloadBtn) unloadBtn.classList.add('hidden');
+        }
+      } catch (e) {
+        el.textContent = '未加载';
+        if (loadBtn) loadBtn.classList.remove('hidden');
+        if (unloadBtn) unloadBtn.classList.add('hidden');
       }
     }
 
@@ -1306,6 +1461,7 @@
       renderStats();
       renderCalendar();
       renderDictionaryInfo();
+      renderFullDictInfo();
       if (lastDrawnNew) renderPageList('newResultList', lastDrawnNew);
       if (lastReviewDraw) renderPageList('reviewResultList', lastReviewDraw.drawn);
       if (lastTodayPages) renderPageList('todayResultList', lastTodayPages, true);
