@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>背单词抽页码</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f5f7;
+      color: #333;
+      padding: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 22px;
+      text-align: center;
+      margin: 16px 0 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #1c1c1e;
+    }
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .status-item {
+      background: #f2f2f7;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+    .status-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .status-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #007aff;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin: 10px 0 6px;
+    }
+    input[type="number"], select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 16px;
+      background: #fff;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:active { opacity: 0.8; }
+    .btn-primary { background: #007aff; color: #fff; }
+    .btn-success { background: #34c759; color: #fff; }
+    .btn-warning { background: #ff9500; color: #fff; }
+    .btn-danger { background: #ff3b30; color: #fff; }
+    .btn-secondary { background: #8e8e93; color: #fff; }
+    .result-box {
+      background: #e8f4fd;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 12px;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .result-title {
+      font-weight: 600;
+      color: #007aff;
+      margin-bottom: 6px;
+    }
+    .pages-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .page-tag {
+      background: #007aff;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+    .history-item {
+      font-size: 13px;
+      color: #666;
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .hidden { display: none; }
+    .section { margin-bottom: 16px; }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+      margin: 24px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>📚 背单词抽页码</h1>
+
+  <div class="card">
+    <div class="card-title">设置</div>
+    <label>单词本总页数</label>
+    <input type="number" id="totalPages" value="634" min="1">
+    <button class="btn-secondary" onclick="initFromInput()">初始化 / 重置</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 当前状态</div>
+    <div class="status-grid" id="statusGrid">
+      <div class="status-item">
+        <div class="status-label">新背池</div>
+        <div class="status-value" id="newCount">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🎲 抽取新背页码</div>
+    <label>今天要抽几页？</label>
+    <input type="number" id="newDrawCount" value="5" min="1">
+    <button class="btn-primary" onclick="drawNew()">抽取新背</button>
+    <div id="newResult" class="result-box hidden">
+      <div class="result-title">今天新背</div>
+      <div id="newResultText"></div>
+      <div class="pages-tags" id="newResultTags"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔁 抽取复习页码</div>
+    <label>选择复习池</label>
+    <select id="reviewPoolSelect"></select>
+    <label>今天要复习几页？</label>
+    <input type="number" id="reviewDrawCount" value="3" min="1">
+    <button class="btn-success" onclick="drawReview()">抽取复习</button>
+    <div id="reviewResult" class="result-box hidden">
+      <div class="result-title" id="reviewResultTitle">复习内容</div>
+      <div id="reviewResultText"></div>
+      <div class="pages-tags" id="reviewResultTags"></div>
+      <button class="btn-warning" id="moveNextBtn" onclick="moveToNextPool()" style="margin-top:12px;">复习完成，移入下一轮</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💾 数据备份</div>
+    <button class="btn-primary" onclick="exportData()">导出备份</button>
+    <label style="margin-top:10px;">导入备份文件</label>
+    <input type="file" id="importFile" accept=".json" onchange="importData(this)">
+  </div>
+
+  <div class="card">
+    <div class="card-title">📝 最近操作</div>
+    <div id="historyList" style="max-height:200px;overflow:auto;"></div>
+  </div>
+
+  <div class="footer">数据自动保存在本机浏览器中</div>
+
+  <script>
+    const STORAGE_KEY = 'wordLearningState_v1';
+    let state = null;
+    let lastReviewDraw = null;
+
+    function initState(total = 634) {
+      return {
+        total: total,
+        newPool: Array.from({length: total}, (_, i) => i + 1),
+        reviewPools: {},
+        history: []
+      };
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('读取保存数据失败', e);
+        }
+      }
+      return initState();
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function drawFromPool(pool, count) {
+      if (count <= 0 || pool.length === 0) return [];
+      const shuffled = shuffleArray(pool);
+      return shuffled.slice(0, Math.min(count, pool.length)).sort((a, b) => a - b);
+    }
+
+    function removePages(pool, pages) {
+      return pool.filter(p => !pages.includes(p));
+    }
+
+    function addToPool(poolName, pages) {
+      if (!state.reviewPools[poolName]) {
+        state.reviewPools[poolName] = [];
+      }
+      state.reviewPools[poolName] = [...new Set([...state.reviewPools[poolName], ...pages])].sort((a, b) => a - b);
+    }
+
+    function logAction(action, pages) {
+      const time = new Date().toLocaleString('zh-CN');
+      state.history.unshift({ time, action, pages });
+      if (state.history.length > 50) state.history.pop();
+    }
+
+    function renderStatus() {
+      document.getElementById('totalPages').value = state.total;
+      document.getElementById('newCount').textContent = state.newPool.length;
+
+      const grid = document.getElementById('statusGrid');
+      grid.innerHTML = `
+        <div class="status-item">
+          <div class="status-label">新背池</div>
+          <div class="status-value">${state.newPool.length}</div>
+        </div>
+      `;
+
+      const poolNames = Object.keys(state.reviewPools).sort((a, b) => parseInt(a) - parseInt(b));
+      poolNames.forEach(name => {
+        if (state.reviewPools[name].length > 0) {
+          grid.innerHTML += `
+            <div class="status-item">
+              <div class="status-label">复习池 ${name}</div>
+              <div class="status-value">${state.reviewPools[name].length}</div>
+            </div>
+          `;
+        }
+      });
+
+      // 更新复习池下拉框
+      const select = document.getElementById('reviewPoolSelect');
+      select.innerHTML = '';
+      const nonEmptyPools = poolNames.filter(name => state.reviewPools[name].length > 0);
+      if (nonEmptyPools.length === 0) {
+        select.innerHTML = '<option value="">没有可复习的页码</option>';
+      } else {
+        nonEmptyPools.forEach(name => {
+          select.innerHTML += `<option value="${name}">复习池 ${name}（${state.reviewPools[name].length} 页）</option>`;
+        });
+      }
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+      if (state.history.length === 0) {
+        list.innerHTML = '<div class="history-item">暂无操作记录</div>';
+        return;
+      }
+      list.innerHTML = state.history.map(h => `
+        <div class="history-item">
+          <strong>${h.time}</strong><br>
+          ${h.action}：${h.pages.join('、')}
+        </div>
+      `).join('');
+    }
+
+    function renderTags(containerId, pages) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = pages.map(p => `<span class="page-tag">第 ${p} 页</span>`).join('');
+    }
+
+    function drawNew() {
+      const input = document.getElementById('newDrawCount');
+      const count = parseInt(input.value);
+      if (isNaN(count) || count <= 0) {
+        alert('请输入有效的抽取数量');
+        return;
+      }
+      if (state.newPool.length === 0) {
+        alert('新背池已空');
+        return;
+      }
+
+      const drawn = drawFromPool(state.newPool, count);
+      state.newPool = removePages(state.newPool, drawn);
+      addToPool('1', drawn);
+      logAction('新背', drawn);
+      saveState();
+
+      document.getElementById('newResult').classList.remove('hidden');
+      document.getElementById('newResultText').textContent = `共 ${drawn.length} 页，已加入复习池 1`;
+      renderTags('newResultTags', drawn);
+      renderStatus();
+      renderHistory();
+    }
+
+    function drawReview() {
+      const select = document.getElementById('reviewPoolSelect');
+      const poolName = select.value;
+      if (!poolName) {
+        alert('当前没有可复习的页码');
+        return;
+      }
+
+      const input = document.getElementById('reviewDrawCount');
+      const count = parseInt(input.value);
+      if (isNaN(count) || count <= 0) {
+        alert('请输入有效的抽取数量');
+        return;
+      }
+
+      const pool = state.reviewPools[poolName];
+      if (!pool || pool.length === 0) {
+        alert('该复习池已空');
+        return;
+      }
+
+      const drawn = drawFromPool(pool, count);
+      lastReviewDraw = { poolName, drawn };
+
+      document.getElementById('reviewResult').classList.remove('hidden');
+      document.getElementById('reviewResultTitle').textContent = `从复习池 ${poolName} 抽取`;
+      document.getElementById('reviewResultText').textContent = `共 ${drawn.length} 页`;
+      renderTags('reviewResultTags', drawn);
+      document.getElementById('moveNextBtn').style.display = 'block';
+    }
+
+    function moveToNextPool() {
+      if (!lastReviewDraw) return;
+      const { poolName, drawn } = lastReviewDraw;
+      state.reviewPools[poolName] = removePages(state.reviewPools[poolName], drawn);
+      const nextName = String(parseInt(poolName) + 1);
+      addToPool(nextName, drawn);
+      logAction(`复习池 ${poolName} 完成，移入复习池 ${nextName}`, drawn);
+      saveState();
+
+      alert(`已移入复习池 ${nextName}`);
+      document.getElementById('reviewResult').classList.add('hidden');
+      lastReviewDraw = null;
+      renderStatus();
+      renderHistory();
+    }
+
+    function initFromInput() {
+      const total = parseInt(document.getElementById('totalPages').value);
+      if (isNaN(total) || total < 1) {
+        alert('请输入有效的总页数');
+        return;
+      }
+      if (confirm(`确定要重置吗？当前进度会清空，总页数设为 ${total}。`)) {
+        state = initState(total);
+        saveState();
+        renderStatus();
+        renderHistory();
+        document.getElementById('newResult').classList.add('hidden');
+        document.getElementById('reviewResult').classList.add('hidden');
+      }
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '背单词状态备份.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importData(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.newPool && data.reviewPools) {
+            state = data;
+            saveState();
+            renderStatus();
+            renderHistory();
+            alert('备份导入成功');
+          } else {
+            alert('备份文件格式不正确');
+          }
+        } catch (err) {
+          alert('读取备份失败');
+        }
+      };
+      reader.readAsText(file);
+      input.value = '';
+    }
+
+    // 初始化
+    state = loadState();
+    renderStatus();
+    renderHistory();
+  </script>
+</body>
+</html>
