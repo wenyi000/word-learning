@@ -271,6 +271,161 @@
       font-size: 12px;
       color: #007aff;
     }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: #f2f2f7;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #007aff;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: #666;
+      margin-top: 4px;
+    }
+    .date-query {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .date-query input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+    .query-result {
+      background: #e8f4fd;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+      margin-top: 10px;
+    }
+    .query-result-number {
+      font-size: 32px;
+      font-weight: 700;
+      color: #007aff;
+    }
+    .calendar-wrap {
+      margin-top: 16px;
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .calendar-month-title {
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .calendar-nav {
+      background: #f2f2f7;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 0;
+      padding: 0;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .calendar-weekday {
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+      padding: 4px 0;
+    }
+    .calendar-day {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      background: #f2f2f7;
+      color: #333;
+      cursor: pointer;
+      transition: transform 0.1s;
+      position: relative;
+    }
+    .calendar-day:active {
+      transform: scale(0.95);
+    }
+    .calendar-day.has-words {
+      background: #d1e9ff;
+      color: #007aff;
+      font-weight: 600;
+    }
+    .calendar-day.selected {
+      outline: 2px solid #007aff;
+      outline-offset: -2px;
+    }
+    .calendar-day .day-count {
+      font-size: 10px;
+      color: #007aff;
+      margin-top: 1px;
+    }
+    .calendar-day.empty {
+      background: transparent;
+      cursor: default;
+    }
+    .calendar-legend {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #666;
+    }
+    .legend-box {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      background: #d1e9ff;
+    }
+    .selected-day-detail {
+      background: #f2f2f7;
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+    .selected-day-detail h4 {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 8px;
+    }
+    .selected-pages {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .selected-page-tag {
+      background: #fff;
+      border-radius: 10px;
+      padding: 4px 10px;
+      font-size: 13px;
+      color: #555;
+    }
   </style>
 </head>
 <body>
@@ -296,6 +451,58 @@
       <div class="status-item">
         <div class="status-label">单词池</div>
         <div class="status-value" id="newCount">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📈 单词统计</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">累计单词</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statThisWeek">0</div>
+        <div class="stat-label">本周单词</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statThisMonth">0</div>
+        <div class="stat-label">本月单词</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statToday">0</div>
+        <div class="stat-label">今日单词</div>
+      </div>
+    </div>
+    <label>自定义时间范围查询</label>
+    <div class="date-query">
+      <input type="date" id="queryStartDate">
+      <input type="date" id="queryEndDate">
+    </div>
+    <button class="btn-secondary" onclick="queryDateRange()">查询该时间段单词数</button>
+    <div id="queryResult" class="query-result hidden">
+      <div class="query-result-number" id="queryResultNumber">0</div>
+      <div class="stat-label" id="queryResultLabel">个单词</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🗓️ 背单词日历</div>
+    <div class="calendar-wrap">
+      <div class="calendar-header">
+        <button class="calendar-nav" onclick="changeCalendarMonth(-1)">‹</button>
+        <div class="calendar-month-title" id="calendarMonthTitle">2026年10月</div>
+        <button class="calendar-nav" onclick="changeCalendarMonth(1)">›</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+      <div class="calendar-legend">
+        <div class="legend-box"></div>
+        <span>当天有背单词</span>
+      </div>
+      <div id="selectedDayDetail" class="selected-day-detail hidden">
+        <h4 id="selectedDayTitle"></h4>
+        <div class="selected-pages" id="selectedDayPages"></div>
       </div>
     </div>
   </div>
@@ -375,11 +582,15 @@
       if (!data.wordMap) data.wordMap = {};
       if (!data.firstDrawnMap) data.firstDrawnMap = {};
       if (!data.history) data.history = [];
-      // 兼容旧版 wordMap（字符串数组转成对象数组）
+      // 兼容旧版 wordMap（字符串数组转成对象数组，补上 addedAt）
       for (const page in data.wordMap) {
+        const defaultDate = data.firstDrawnMap[page] || getTodayStr();
         data.wordMap[page] = data.wordMap[page].map(item => {
           if (typeof item === 'string') {
-            return { word: item, phonetic: '', meaning: '' };
+            return { word: item, phonetic: '', meaning: '', addedAt: defaultDate };
+          }
+          if (!item.addedAt) {
+            item.addedAt = defaultDate;
           }
           return item;
         });
@@ -461,39 +672,43 @@
 
     // ============== 字典功能 ==============
 
-    function normalizeWordItem(item) {
+    function normalizeWordItem(item, defaultDate) {
       if (typeof item === 'string') {
-        return { word: item, phonetic: '', meaning: '' };
+        return { word: item, phonetic: '', meaning: '', addedAt: defaultDate || getTodayStr() };
       }
       return {
         word: item.word || '',
         phonetic: item.phonetic || '',
-        meaning: item.meaning || ''
+        meaning: item.meaning || '',
+        addedAt: item.addedAt || defaultDate || getTodayStr()
       };
     }
 
     function getWords(page) {
       const list = state.wordMap[page] || [];
-      return list.map(normalizeWordItem);
+      const defaultDate = getFirstDrawn(page) || getTodayStr();
+      return list.map(item => normalizeWordItem(item, defaultDate));
     }
 
     function addWordItem(page, item) {
-      const normalized = normalizeWordItem(item);
+      const defaultDate = getFirstDrawn(page) || getTodayStr();
+      const normalized = normalizeWordItem(item, defaultDate);
       if (!normalized.word) return;
       if (!state.wordMap[page]) {
         state.wordMap[page] = [];
       }
       // 如果单词已存在，更新音标和释义
       const existingIndex = state.wordMap[page].findIndex(i => {
-        const ni = normalizeWordItem(i);
+        const ni = normalizeWordItem(i, defaultDate);
         return ni.word.toLowerCase() === normalized.word.toLowerCase();
       });
       if (existingIndex >= 0) {
-        const existing = normalizeWordItem(state.wordMap[page][existingIndex]);
+        const existing = normalizeWordItem(state.wordMap[page][existingIndex], defaultDate);
         state.wordMap[page][existingIndex] = {
           word: normalized.word,
           phonetic: normalized.phonetic || existing.phonetic,
-          meaning: normalized.meaning || existing.meaning
+          meaning: normalized.meaning || existing.meaning,
+          addedAt: normalized.addedAt
         };
       } else {
         state.wordMap[page].push(normalized);
@@ -503,12 +718,14 @@
       if (lastReviewDraw) {
         renderPageList('reviewResultList', lastReviewDraw.drawn);
       }
+      renderStats();
     }
 
     function removeWord(page, word) {
       if (state.wordMap[page]) {
+        const defaultDate = getFirstDrawn(page) || getTodayStr();
         state.wordMap[page] = state.wordMap[page].filter(i => {
-          const ni = normalizeWordItem(i);
+          const ni = normalizeWordItem(i, defaultDate);
           return ni.word !== word;
         });
         if (state.wordMap[page].length === 0) {
@@ -519,6 +736,7 @@
         if (lastReviewDraw) {
           renderPageList('reviewResultList', lastReviewDraw.drawn);
         }
+        renderStats();
       }
     }
 
@@ -734,10 +952,183 @@
       }).join('');
     }
 
+    // ============== 统计功能 ==============
+
+    function getAllWordItems() {
+      const items = [];
+      for (const page in state.wordMap) {
+        const defaultDate = getFirstDrawn(page) || getTodayStr();
+        state.wordMap[page].forEach(item => {
+          const normalized = normalizeWordItem(item, defaultDate);
+          items.push({ ...normalized, page: parseInt(page) });
+        });
+      }
+      return items;
+    }
+
+    function getWordCountByDate() {
+      const counts = {};
+      const pagesByDate = {};
+      getAllWordItems().forEach(item => {
+        const date = item.addedAt;
+        counts[date] = (counts[date] || 0) + 1;
+        if (!pagesByDate[date]) pagesByDate[date] = new Set();
+        pagesByDate[date].add(item.page);
+      });
+      const result = {};
+      for (const date in counts) {
+        result[date] = {
+          count: counts[date],
+          pages: Array.from(pagesByDate[date]).sort((a, b) => a - b)
+        };
+      }
+      return result;
+    }
+
+    function countWordsInRange(startDate, endDate) {
+      const byDate = getWordCountByDate();
+      let count = 0;
+      for (const date in byDate) {
+        if (date >= startDate && date <= endDate) {
+          count += byDate[date].count;
+        }
+      }
+      return count;
+    }
+
+    function getThisWeekRange() {
+      const now = new Date();
+      const day = now.getDay();
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(now.getFullYear(), now.getMonth(), diff);
+      const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
+      return [formatDate(monday), formatDate(sunday)];
+    }
+
+    function getThisMonthRange() {
+      const now = new Date();
+      const first = new Date(now.getFullYear(), now.getMonth(), 1);
+      const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      return [formatDate(first), formatDate(last)];
+    }
+
+    function formatDate(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    function renderStats() {
+      const byDate = getWordCountByDate();
+      const today = getTodayStr();
+      const [weekStart, weekEnd] = getThisWeekRange();
+      const [monthStart, monthEnd] = getThisMonthRange();
+
+      let total = 0;
+      let todayCount = 0;
+      let weekCount = 0;
+      let monthCount = 0;
+
+      for (const date in byDate) {
+        const c = byDate[date].count;
+        total += c;
+        if (date === today) todayCount += c;
+        if (date >= weekStart && date <= weekEnd) weekCount += c;
+        if (date >= monthStart && date <= monthEnd) monthCount += c;
+      }
+
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statThisWeek').textContent = weekCount;
+      document.getElementById('statThisMonth').textContent = monthCount;
+      document.getElementById('statToday').textContent = todayCount;
+    }
+
+    function queryDateRange() {
+      const start = document.getElementById('queryStartDate').value;
+      const end = document.getElementById('queryEndDate').value;
+      if (!start || !end) {
+        alert('请选择开始和结束日期');
+        return;
+      }
+      if (start > end) {
+        alert('开始日期不能晚于结束日期');
+        return;
+      }
+      const count = countWordsInRange(start, end);
+      document.getElementById('queryResult').classList.remove('hidden');
+      document.getElementById('queryResultNumber').textContent = count;
+      document.getElementById('queryResultLabel').textContent = `${start} 至 ${end} 共背了`;
+    }
+
+    // ============== 日历功能 ==============
+
+    let calendarCurrentDate = new Date();
+    let selectedCalendarDate = null;
+
+    function renderCalendar() {
+      const year = calendarCurrentDate.getFullYear();
+      const month = calendarCurrentDate.getMonth();
+      document.getElementById('calendarMonthTitle').textContent = `${year}年${month + 1}月`;
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startWeekDay = firstDay.getDay();
+      const daysInMonth = lastDay.getDate();
+
+      const byDate = getWordCountByDate();
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+
+      const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+      weekdays.forEach(wd => {
+        grid.innerHTML += `<div class="calendar-weekday">${wd}</div>`;
+      });
+
+      // 空白
+      for (let i = 0; i < startWeekDay; i++) {
+        grid.innerHTML += `<div class="calendar-day empty"></div>`;
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dayData = byDate[dateStr];
+        const hasWords = dayData && dayData.count > 0;
+        const isSelected = selectedCalendarDate === dateStr;
+        const cls = `calendar-day ${hasWords ? 'has-words' : ''} ${isSelected ? 'selected' : ''}`;
+        const countHtml = hasWords ? `<span class="day-count">${dayData.count}</span>` : '';
+        grid.innerHTML += `<div class="${cls}" onclick="selectCalendarDate('${dateStr}')"><span>${d}</span>${countHtml}</div>`;
+      }
+    }
+
+    function changeCalendarMonth(delta) {
+      calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + delta);
+      renderCalendar();
+    }
+
+    function selectCalendarDate(dateStr) {
+      selectedCalendarDate = dateStr;
+      renderCalendar();
+      const byDate = getWordCountByDate();
+      const dayData = byDate[dateStr];
+      const detail = document.getElementById('selectedDayDetail');
+      const title = document.getElementById('selectedDayTitle');
+      const pagesDiv = document.getElementById('selectedDayPages');
+
+      if (dayData) {
+        detail.classList.remove('hidden');
+        title.textContent = `${dateStr} 背了 ${dayData.count} 个单词，涉及 ${dayData.pages.length} 页`;
+        pagesDiv.innerHTML = dayData.pages.map(p => `<span class="selected-page-tag">第 ${p} 页</span>`).join('');
+      } else {
+        detail.classList.remove('hidden');
+        title.textContent = `${dateStr} 没有背单词`;
+        pagesDiv.innerHTML = '';
+      }
+    }
+
     function renderAll() {
       renderStatus();
       renderHistory();
       renderSchedule();
+      renderStats();
+      renderCalendar();
       if (lastDrawnNew) renderPageList('newResultList', lastDrawnNew);
       if (lastReviewDraw) renderPageList('reviewResultList', lastReviewDraw.drawn);
     }
@@ -881,9 +1272,7 @@
         try {
           const data = JSON.parse(e.target.result);
           if (data.newPool && data.reviewPools) {
-            if (!data.wordMap) data.wordMap = {};
-            if (!data.firstDrawnMap) data.firstDrawnMap = {};
-            state = data;
+            state = migrateState(data);
             saveState();
             lastDrawnNew = null;
             lastReviewDraw = null;
@@ -906,6 +1295,14 @@
     state = loadState();
     if (!state.wordMap) state.wordMap = {};
     if (!state.firstDrawnMap) state.firstDrawnMap = {};
+
+    // 设置默认查询日期为本月
+    const todayForQuery = new Date();
+    const firstDayOfMonth = new Date(todayForQuery.getFullYear(), todayForQuery.getMonth(), 1);
+    const lastDayOfMonth = new Date(todayForQuery.getFullYear(), todayForQuery.getMonth() + 1, 0);
+    document.getElementById('queryStartDate').value = formatDate(firstDayOfMonth);
+    document.getElementById('queryEndDate').value = formatDate(lastDayOfMonth);
+
     renderAll();
   </script>
 </body>
