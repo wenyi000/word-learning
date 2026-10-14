@@ -59,7 +59,7 @@
       color: #666;
       margin: 10px 0 6px;
     }
-    input[type="number"], select {
+    input[type="number"], select, input[type="text"].word-input {
       width: 100%;
       padding: 12px;
       border: 1px solid #ddd;
@@ -84,6 +84,15 @@
     .btn-warning { background: #ff9500; color: #fff; }
     .btn-danger { background: #ff3b30; color: #fff; }
     .btn-secondary { background: #8e8e93; color: #fff; }
+    .btn-add-word {
+      width: auto;
+      padding: 8px 16px;
+      margin: 0;
+      background: #007aff;
+      color: #fff;
+      border-radius: 8px;
+      font-size: 14px;
+    }
     .result-box {
       background: #e8f4fd;
       border-radius: 12px;
@@ -97,18 +106,76 @@
       color: #007aff;
       margin-bottom: 6px;
     }
-    .pages-tags {
+    .page-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .page-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #d1e6f7;
+    }
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .page-title {
+      font-weight: 600;
+      color: #007aff;
+    }
+    .page-meta {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+    .word-count {
+      font-size: 13px;
+      color: #666;
+    }
+    .word-section {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed #cce0f0;
+    }
+    .word-list {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-top: 8px;
+      margin-bottom: 10px;
     }
-    .page-tag {
-      background: #007aff;
-      color: #fff;
+    .word-tag {
+      background: #f2f2f7;
+      color: #333;
       padding: 4px 10px;
-      border-radius: 20px;
+      border-radius: 16px;
       font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .word-tag .delete-word {
+      color: #ff3b30;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .word-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .word-input-row .word-input {
+      flex: 1;
+      margin: 0;
+    }
+    .empty-tip {
+      font-size: 13px;
+      color: #999;
+      font-style: italic;
     }
     .history-item {
       font-size: 13px;
@@ -117,12 +184,41 @@
       border-bottom: 1px solid #eee;
     }
     .hidden { display: none; }
-    .section { margin-bottom: 16px; }
     .footer {
       text-align: center;
       font-size: 12px;
       color: #999;
       margin: 24px 0;
+    }
+    .tip {
+      font-size: 13px;
+      color: #666;
+      margin-top: 8px;
+    }
+    .schedule-date {
+      font-weight: 600;
+      color: #333;
+      margin-top: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .schedule-action {
+      font-size: 13px;
+      color: #555;
+      margin: 6px 0 4px;
+    }
+    .schedule-pages {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .schedule-page {
+      background: #e8f4fd;
+      color: #007aff;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
     }
   </style>
 </head>
@@ -133,6 +229,8 @@
     <div class="card-title">设置</div>
     <label>单词本总页数</label>
     <input type="number" id="totalPages" value="634" min="1">
+    <label>已背过的页码（用逗号分隔，可选）</label>
+    <input type="text" id="knownPages" placeholder="例如：56,231,256">
     <button class="btn-secondary" onclick="initFromInput()">初始化 / 重置</button>
   </div>
 
@@ -153,8 +251,8 @@
     <button class="btn-primary" onclick="drawNew()">抽取新背</button>
     <div id="newResult" class="result-box hidden">
       <div class="result-title">今天新背</div>
-      <div id="newResultText"></div>
-      <div class="pages-tags" id="newResultTags"></div>
+      <div class="tip">点击每一页可以添加/查看单词</div>
+      <div class="page-list" id="newResultList"></div>
     </div>
   </div>
 
@@ -167,10 +265,15 @@
     <button class="btn-success" onclick="drawReview()">抽取复习</button>
     <div id="reviewResult" class="result-box hidden">
       <div class="result-title" id="reviewResultTitle">复习内容</div>
-      <div id="reviewResultText"></div>
-      <div class="pages-tags" id="reviewResultTags"></div>
+      <div class="tip">点击每一页可以查看/编辑单词</div>
+      <div class="page-list" id="reviewResultList"></div>
       <button class="btn-warning" id="moveNextBtn" onclick="moveToNextPool()" style="margin-top:12px;">复习完成，移入下一轮</button>
     </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 背诵日程</div>
+    <div id="scheduleList"></div>
   </div>
 
   <div class="card">
@@ -188,15 +291,18 @@
   <div class="footer">数据自动保存在本机浏览器中</div>
 
   <script>
-    const STORAGE_KEY = 'wordLearningState_v1';
+    const STORAGE_KEY = 'wordLearningState_v3';
     let state = null;
     let lastReviewDraw = null;
+    let lastDrawnNew = null;
 
     function initState(total = 634) {
       return {
         total: total,
         newPool: Array.from({length: total}, (_, i) => i + 1),
         reviewPools: {},
+        wordMap: {},
+        firstDrawnMap: {},
         history: []
       };
     }
@@ -215,6 +321,15 @@
 
     function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function getTodayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function getNowStr() {
+      return new Date().toLocaleString('zh-CN');
     }
 
     function shuffleArray(arr) {
@@ -244,10 +359,115 @@
     }
 
     function logAction(action, pages) {
-      const time = new Date().toLocaleString('zh-CN');
+      const time = getNowStr();
       state.history.unshift({ time, action, pages });
-      if (state.history.length > 50) state.history.pop();
+      if (state.history.length > 200) state.history.pop();
     }
+
+    function recordFirstDrawn(pages) {
+      const today = getTodayStr();
+      pages.forEach(page => {
+        if (!state.firstDrawnMap[page]) {
+          state.firstDrawnMap[page] = today;
+        }
+      });
+    }
+
+    function getFirstDrawn(page) {
+      return state.firstDrawnMap[page] || null;
+    }
+
+    // ============== 单词管理 ==============
+
+    function getWords(page) {
+      return state.wordMap[page] || [];
+    }
+
+    function addWords(page, words) {
+      const newWords = words.map(w => w.trim()).filter(w => w);
+      if (newWords.length === 0) return;
+      const current = getWords(page);
+      state.wordMap[page] = [...new Set([...current, ...newWords])].sort();
+      saveState();
+      renderPageList('newResultList', lastDrawnNew || []);
+      if (lastReviewDraw) {
+        renderPageList('reviewResultList', lastReviewDraw.drawn);
+      }
+    }
+
+    function removeWord(page, word) {
+      if (state.wordMap[page]) {
+        state.wordMap[page] = state.wordMap[page].filter(w => w !== word);
+        if (state.wordMap[page].length === 0) {
+          delete state.wordMap[page];
+        }
+        saveState();
+        renderPageList('newResultList', lastDrawnNew || []);
+        if (lastReviewDraw) {
+          renderPageList('reviewResultList', lastReviewDraw.drawn);
+        }
+      }
+    }
+
+    function togglePageWords(page) {
+      const section = document.getElementById(`word-section-${page}`);
+      if (section) {
+        section.classList.toggle('hidden');
+      }
+    }
+
+    function addWordsFromInput(page) {
+      const input = document.getElementById(`word-input-${page}`);
+      if (!input) return;
+      const text = input.value;
+      if (!text.trim()) return;
+      const words = text.split(/[,，\n]/);
+      addWords(page, words);
+      input.value = '';
+    }
+
+    function renderWords(page) {
+      const words = getWords(page);
+      if (words.length === 0) {
+        return '<div class="empty-tip">暂无单词，点击添加</div>';
+      }
+      return words.map(w => `
+        <span class="word-tag">
+          ${w}
+          <span class="delete-word" onclick="event.stopPropagation(); removeWord(${page}, '${w.replace(/'/g, "\\'")}')">×</span>
+        </span>
+      `).join('');
+    }
+
+    function renderPageList(containerId, pages) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = pages.map(p => {
+        const firstDate = getFirstDrawn(p);
+        const dateText = firstDate ? `首次抽到：${firstDate}` : '首次抽到：今天';
+        return `
+        <div class="page-card">
+          <div class="page-header" onclick="togglePageWords(${p})">
+            <div>
+              <span class="page-title">第 ${p} 页</span>
+              <div class="page-meta">${dateText}</div>
+            </div>
+            <span class="word-count">${getWords(p).length} 个单词</span>
+          </div>
+          <div class="word-section hidden" id="word-section-${p}">
+            <div class="word-list" id="word-list-${p}">
+              ${renderWords(p)}
+            </div>
+            <div class="word-input-row" onclick="event.stopPropagation()">
+              <input type="text" class="word-input" id="word-input-${p}" placeholder="输入单词，多个用逗号分隔">
+              <button class="btn-add-word" onclick="addWordsFromInput(${p})">添加</button>
+            </div>
+          </div>
+        </div>
+      `}).join('');
+    }
+
+    // ============== 页面渲染 ==============
 
     function renderStatus() {
       document.getElementById('totalPages').value = state.total;
@@ -273,7 +493,6 @@
         }
       });
 
-      // 更新复习池下拉框
       const select = document.getElementById('reviewPoolSelect');
       select.innerHTML = '';
       const nonEmptyPools = poolNames.filter(name => state.reviewPools[name].length > 0);
@@ -292,7 +511,7 @@
         list.innerHTML = '<div class="history-item">暂无操作记录</div>';
         return;
       }
-      list.innerHTML = state.history.map(h => `
+      list.innerHTML = state.history.slice(0, 20).map(h => `
         <div class="history-item">
           <strong>${h.time}</strong><br>
           ${h.action}：${h.pages.join('、')}
@@ -300,10 +519,48 @@
       `).join('');
     }
 
-    function renderTags(containerId, pages) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = pages.map(p => `<span class="page-tag">第 ${p} 页</span>`).join('');
+    function renderSchedule() {
+      const container = document.getElementById('scheduleList');
+      if (state.history.length === 0) {
+        container.innerHTML = '<div class="empty-tip">暂无日程记录</div>';
+        return;
+      }
+
+      // 按日期分组
+      const groups = {};
+      state.history.forEach(h => {
+        const date = h.time.split(' ')[0];
+        if (!groups[date]) {
+          groups[date] = [];
+        }
+        groups[date].push(h);
+      });
+
+      const dates = Object.keys(groups).sort((a, b) => new Date(b) - new Date(a));
+
+      container.innerHTML = dates.map(date => {
+        const items = groups[date];
+        return `
+          <div class="schedule-date">${date}</div>
+          ${items.map(h => `
+            <div class="schedule-action">${h.action}</div>
+            <div class="schedule-pages">
+              ${h.pages.map(p => `<span class="schedule-page">第 ${p} 页</span>`).join('')}
+            </div>
+          `).join('')}
+        `;
+      }).join('');
     }
+
+    function renderAll() {
+      renderStatus();
+      renderHistory();
+      renderSchedule();
+      if (lastDrawnNew) renderPageList('newResultList', lastDrawnNew);
+      if (lastReviewDraw) renderPageList('reviewResultList', lastReviewDraw.drawn);
+    }
+
+    // ============== 操作 ==============
 
     function drawNew() {
       const input = document.getElementById('newDrawCount');
@@ -320,14 +577,15 @@
       const drawn = drawFromPool(state.newPool, count);
       state.newPool = removePages(state.newPool, drawn);
       addToPool('1', drawn);
+      recordFirstDrawn(drawn);
       logAction('新背', drawn);
       saveState();
 
+      lastDrawnNew = drawn;
+
       document.getElementById('newResult').classList.remove('hidden');
-      document.getElementById('newResultText').textContent = `共 ${drawn.length} 页，已加入复习池 1`;
-      renderTags('newResultTags', drawn);
-      renderStatus();
-      renderHistory();
+      renderPageList('newResultList', drawn);
+      renderAll();
     }
 
     function drawReview() {
@@ -356,8 +614,7 @@
 
       document.getElementById('reviewResult').classList.remove('hidden');
       document.getElementById('reviewResultTitle').textContent = `从复习池 ${poolName} 抽取`;
-      document.getElementById('reviewResultText').textContent = `共 ${drawn.length} 页`;
-      renderTags('reviewResultTags', drawn);
+      renderPageList('reviewResultList', drawn);
       document.getElementById('moveNextBtn').style.display = 'block';
     }
 
@@ -373,8 +630,7 @@
       alert(`已移入复习池 ${nextName}`);
       document.getElementById('reviewResult').classList.add('hidden');
       lastReviewDraw = null;
-      renderStatus();
-      renderHistory();
+      renderAll();
     }
 
     function initFromInput() {
@@ -383,13 +639,35 @@
         alert('请输入有效的总页数');
         return;
       }
-      if (confirm(`确定要重置吗？当前进度会清空，总页数设为 ${total}。`)) {
+
+      // 读取已背过的页码
+      const knownInput = document.getElementById('knownPages').value;
+      let knownPages = [];
+      if (knownInput.trim()) {
+        knownPages = knownInput.split(/[,，\s]+/)
+          .map(s => parseInt(s.trim()))
+          .filter(n => !isNaN(n) && n >= 1 && n <= total);
+        knownPages = [...new Set(knownPages)].sort((a, b) => a - b);
+      }
+
+      const knownText = knownPages.length > 0 ? `，其中第 ${knownPages.join('、')} 页标记为已背过` : '';
+
+      if (confirm(`确定要重置吗？当前进度会清空，总页数设为 ${total}${knownText}。`)) {
         state = initState(total);
+
+        if (knownPages.length > 0) {
+          state.newPool = removePages(state.newPool, knownPages);
+          addToPool('1', knownPages);
+          recordFirstDrawn(knownPages);
+          logAction('初始化：标记已背过页码', knownPages);
+        }
+
         saveState();
-        renderStatus();
-        renderHistory();
+        lastDrawnNew = null;
+        lastReviewDraw = null;
         document.getElementById('newResult').classList.add('hidden');
         document.getElementById('reviewResult').classList.add('hidden');
+        renderAll();
       }
     }
 
@@ -411,10 +689,15 @@
         try {
           const data = JSON.parse(e.target.result);
           if (data.newPool && data.reviewPools) {
+            if (!data.wordMap) data.wordMap = {};
+            if (!data.firstDrawnMap) data.firstDrawnMap = {};
             state = data;
             saveState();
-            renderStatus();
-            renderHistory();
+            lastDrawnNew = null;
+            lastReviewDraw = null;
+            document.getElementById('newResult').classList.add('hidden');
+            document.getElementById('reviewResult').classList.add('hidden');
+            renderAll();
             alert('备份导入成功');
           } else {
             alert('备份文件格式不正确');
@@ -429,8 +712,9 @@
 
     // 初始化
     state = loadState();
-    renderStatus();
-    renderHistory();
+    if (!state.wordMap) state.wordMap = {};
+    if (!state.firstDrawnMap) state.firstDrawnMap = {};
+    renderAll();
   </script>
 </body>
 </html>
