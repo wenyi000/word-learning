@@ -436,6 +436,11 @@
     <label>单词本总页数</label>
     <input type="number" id="totalPages" value="634" min="1">
     <button class="btn-secondary" onclick="initFromInput()">初始化 / 重置</button>
+    <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
+    <label>本地字典文件（可选）</label>
+    <div class="tip" style="margin:0 0 8px;">支持 JSON、CSV、TXT；导入后输入单词会自动带出音标和释义</div>
+    <input type="file" id="dictFile" accept=".json,.csv,.txt" onchange="importDictionary(this.files[0])">
+    <div id="dictionaryInfo" style="margin-top:8px;font-size:13px;color:#666;">未加载本地字典</div>
   </div>
 
   <div class="card">
@@ -566,7 +571,7 @@
     let lastDrawnNew = null;
     let lastTodayPages = null;
 
-    const DATA_VERSION = 4;
+    const DATA_VERSION = 5;
 
     function initState(total = 634) {
       return {
@@ -576,7 +581,8 @@
         reviewPools: {},
         wordMap: {},
         firstDrawnMap: {},
-        history: []
+        history: [],
+        dictionary: {}
       };
     }
 
@@ -589,6 +595,7 @@
       if (!data.wordMap) data.wordMap = {};
       if (!data.firstDrawnMap) data.firstDrawnMap = {};
       if (!data.history) data.history = [];
+      if (!data.dictionary) data.dictionary = {};
       // 兼容旧版 wordMap（字符串数组转成对象数组，补上 addedAt）
       for (const page in data.wordMap) {
         const defaultDate = data.firstDrawnMap[page] || getTodayStr();
@@ -747,7 +754,12 @@
       }
     }
 
-    async function fetchDictionary(word) {
+    function lookupDictionary(word) {
+      const key = word.trim().toLowerCase();
+      return state.dictionary[key] || null;
+    }
+
+    async function fetchOnlineDictionary(word) {
       try {
         const resp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
         if (!resp.ok) return null;
@@ -762,8 +774,112 @@
         }
         return { phonetic, meaning };
       } catch (e) {
-        console.error('查词失败', e);
+        console.error('在线查词失败', e);
         return null;
+      }
+    }
+
+    async function resolveWordInfo(word) {
+      const local = lookupDictionary(word);
+      if (local && (local.phonetic || local.meaning)) return local;
+      const online = await fetchOnlineDictionary(word);
+      if (online) return online;
+      return { phonetic: '', meaning: '' };
+    }
+
+    function parseDictionary(text) {
+      const dict = {};
+      text = text.trim();
+      if (!text) return dict;
+
+      // 尝试 JSON
+      if (text.startsWith('[') || text.startsWith('{')) {
+        try {
+          const data = JSON.parse(text);
+          const items = Array.isArray(data) ? data : (data.words || data.dictionary || []);
+          items.forEach(item => {
+            const w = item.word || item.w || item.en;
+            if (w) {
+              dict[w.trim().toLowerCase()] = {
+                phonetic: item.phonetic || item.py || item.phon || item.ipa || '',
+                meaning: item.meaning || item.mean || item.cn || item.def || item.definition || ''
+              };
+            }
+          });
+          return dict;
+        } catch (e) {}
+      }
+
+      // CSV / TSV
+      const lines = text.split(/\r?\n/);
+      const firstLine = lines[0].toLowerCase();
+      const hasHeader = /word|单词|en|term/.test(firstLine);
+      const sep = text.includes('\t') ? '\t' : ',';
+      const startIndex = hasHeader ? 1 : 0;
+
+      let wordIdx = 0, phoneticIdx = -1, meaningIdx = -1;
+      if (hasHeader) {
+        const headers = lines[0].split(sep).map(h => h.trim().toLowerCase());
+        wordIdx = headers.findIndex(h => /word|单词|en|term/.test(h));
+        phoneticIdx = headers.findIndex(h => /phonetic|音标|ipa|py/.test(h));
+        meaningIdx = headers.findIndex(h => /meaning|释义|中文|cn|def|translation/.test(h));
+        if (wordIdx < 0) wordIdx = 0;
+      }
+
+      for (let i = startIndex; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        const parts = line.split(sep).map(p => p.trim());
+        const word = parts[wordIdx];
+        if (!word) continue;
+
+        let phonetic = phoneticIdx >= 0 ? parts[phoneticIdx] : '';
+        let meaning = meaningIdx >= 0 ? parts[meaningIdx] : '';
+
+        // 如果没有CSV头，尝试按 /.../ 或 [...] 拆分音标
+        if (!hasHeader && parts.length === 1) {
+          const m = line.match(/^([^/\[\]]+?)(?:\s*\/([^/]+)\/|\s*\[([^\]]+)\])?\s+(.+)$/);
+          if (m) {
+            const w = m[1].trim();
+            const p = m[2] || m[3] || '';
+            const d = m[4].trim();
+            dict[w.toLowerCase()] = { phonetic: p, meaning: d };
+            continue;
+          }
+        }
+
+        dict[word.toLowerCase()] = { phonetic, meaning };
+      }
+      return dict;
+    }
+
+    function importDictionary(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const dict = parseDictionary(e.target.result);
+          const count = Object.keys(dict).length;
+          if (count === 0) {
+            alert('没有解析出单词，请检查文件格式');
+            return;
+          }
+          state.dictionary = { ...state.dictionary, ...dict };
+          saveState();
+          renderDictionaryInfo();
+          alert(`导入成功，新增 ${count} 个单词`);
+        } catch (err) {
+          alert('导入失败：' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function renderDictionaryInfo() {
+      const el = document.getElementById('dictionaryInfo');
+      if (el) {
+        const count = Object.keys(state.dictionary).length;
+        el.textContent = count > 0 ? `已加载 ${count} 个单词` : '未加载本地字典';
       }
     }
 
@@ -776,27 +892,28 @@
       const word = wordInput.value.trim();
       if (!word) return;
 
-      const loadingEl = document.getElementById(`loading-${page}`);
-      if (loadingEl) loadingEl.classList.remove('hidden');
-
       let phonetic = phoneticInput ? phoneticInput.value.trim() : '';
       let meaning = meaningInput ? meaningInput.value.trim() : '';
 
-      // 如果没有填音标和释义，尝试自动获取
-      if (!phonetic || !meaning) {
-        const dict = await fetchDictionary(word);
-        if (dict) {
-          if (!phonetic) phonetic = dict.phonetic;
-          if (!meaning) meaning = dict.meaning;
-        }
-      }
-
+      // 先立即保存用户输入的单词，避免网络卡住导致加不进去
       addWordItem(page, { word, phonetic, meaning });
 
       wordInput.value = '';
       if (phoneticInput) phoneticInput.value = '';
       if (meaningInput) meaningInput.value = '';
-      if (loadingEl) loadingEl.classList.add('hidden');
+
+      // 如果用户没填音标或释义，再异步查词并更新
+      if (!phonetic || !meaning) {
+        const loadingEl = document.getElementById(`loading-${page}`);
+        if (loadingEl) loadingEl.classList.remove('hidden');
+        const info = await resolveWordInfo(word);
+        if (info && (info.phonetic || info.meaning)) {
+          const finalPhonetic = phonetic || info.phonetic;
+          const finalMeaning = meaning || info.meaning;
+          addWordItem(page, { word, phonetic: finalPhonetic, meaning: finalMeaning });
+        }
+        if (loadingEl) loadingEl.classList.add('hidden');
+      }
     }
 
     function speakWord(word) {
@@ -1185,6 +1302,7 @@
       renderSchedule();
       renderStats();
       renderCalendar();
+      renderDictionaryInfo();
       if (lastDrawnNew) renderPageList('newResultList', lastDrawnNew);
       if (lastReviewDraw) renderPageList('reviewResultList', lastReviewDraw.drawn);
       if (lastTodayPages) renderPageList('todayResultList', lastTodayPages, true);
