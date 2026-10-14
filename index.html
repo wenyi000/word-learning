@@ -123,6 +123,20 @@
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
+      padding: 4px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .page-header:active {
+      background: #f0f7ff;
+    }
+    .click-hint {
+      font-size: 12px;
+      color: #007aff;
+      background: #e8f4fd;
+      padding: 2px 8px;
+      border-radius: 10px;
+      white-space: nowrap;
     }
     .page-title {
       font-weight: 600;
@@ -280,34 +294,34 @@
     <div class="card-title">📊 当前状态</div>
     <div class="status-grid" id="statusGrid">
       <div class="status-item">
-        <div class="status-label">新背池</div>
+        <div class="status-label">单词池</div>
         <div class="status-value" id="newCount">0</div>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">🎲 抽取新背页码</div>
+    <div class="card-title">🎲 从单词池抽取</div>
     <label>今天要抽几页？</label>
     <input type="number" id="newDrawCount" value="5" min="1">
-    <button class="btn-primary" onclick="drawNew()">抽取新背</button>
+    <button class="btn-primary" onclick="drawNew()">抽取新页</button>
     <div id="newResult" class="result-box hidden">
       <div class="result-title">今天新背</div>
-      <div class="tip">点击每一页可以添加/查看单词</div>
+      <div class="tip">👇 点击每一页展开，即可添加单词</div>
       <div class="page-list" id="newResultList"></div>
     </div>
   </div>
 
   <div class="card">
-    <div class="card-title">🔁 抽取复习页码</div>
-    <label>选择复习池</label>
+    <div class="card-title">🔁 抽取复习单词池</div>
+    <label>选择复习单词池</label>
     <select id="reviewPoolSelect"></select>
     <label>今天要复习几页？</label>
     <input type="number" id="reviewDrawCount" value="3" min="1">
     <button class="btn-success" onclick="drawReview()">抽取复习</button>
     <div id="reviewResult" class="result-box hidden">
       <div class="result-title" id="reviewResultTitle">复习内容</div>
-      <div class="tip">点击每一页可以查看/编辑单词</div>
+      <div class="tip">👇 点击每一页展开，即可查看/编辑单词</div>
       <div class="page-list" id="reviewResultList"></div>
       <button class="btn-warning" id="moveNextBtn" onclick="moveToNextPool()" style="margin-top:12px;">复习完成，移入下一轮</button>
     </div>
@@ -338,8 +352,11 @@
     let lastReviewDraw = null;
     let lastDrawnNew = null;
 
+    const DATA_VERSION = 4;
+
     function initState(total = 634) {
       return {
+        version: DATA_VERSION,
         total: total,
         newPool: Array.from({length: total}, (_, i) => i + 1),
         reviewPools: {},
@@ -349,11 +366,34 @@
       };
     }
 
+    function migrateState(data) {
+      if (!data) return initState();
+      // 确保所有字段存在
+      if (!data.version) data.version = 1;
+      if (!data.newPool) data.newPool = Array.from({length: data.total || 634}, (_, i) => i + 1);
+      if (!data.reviewPools) data.reviewPools = {};
+      if (!data.wordMap) data.wordMap = {};
+      if (!data.firstDrawnMap) data.firstDrawnMap = {};
+      if (!data.history) data.history = [];
+      // 兼容旧版 wordMap（字符串数组转成对象数组）
+      for (const page in data.wordMap) {
+        data.wordMap[page] = data.wordMap[page].map(item => {
+          if (typeof item === 'string') {
+            return { word: item, phonetic: '', meaning: '' };
+          }
+          return item;
+        });
+      }
+      data.version = DATA_VERSION;
+      return data;
+    }
+
     function loadState() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const data = JSON.parse(saved);
+          return migrateState(data);
         } catch (e) {
           console.error('读取保存数据失败', e);
         }
@@ -573,12 +613,13 @@
       `).join('');
     }
 
-    function renderPageList(containerId, pages) {
+    function renderPageList(containerId, pages, expandFirst = true) {
       const container = document.getElementById(containerId);
       if (!container) return;
-      container.innerHTML = pages.map(p => {
+      container.innerHTML = pages.map((p, index) => {
         const firstDate = getFirstDrawn(p);
         const dateText = firstDate ? `首次抽到：${firstDate}` : '首次抽到：今天';
+        const isExpanded = expandFirst && index === 0 ? '' : 'hidden';
         return `
         <div class="page-card">
           <div class="page-header" onclick="togglePageWords(${p})">
@@ -586,20 +627,23 @@
               <span class="page-title">第 ${p} 页</span>
               <div class="page-meta">${dateText}</div>
             </div>
-            <span class="word-count">${getWords(p).length} 个单词</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="word-count">${getWords(p).length} 个单词</span>
+              <span class="click-hint">点击展开 👇</span>
+            </div>
           </div>
-          <div class="word-section hidden" id="word-section-${p}">
+          <div class="word-section ${isExpanded}" id="word-section-${p}">
             <div class="word-list" id="word-list-${p}">
               ${renderWords(p)}
             </div>
             <div class="dict-input-row" onclick="event.stopPropagation()">
-              <input type="text" class="dict-input" id="word-input-${p}" placeholder="单词">
+              <input type="text" class="dict-input" id="word-input-${p}" placeholder="单词，例如：abandon">
               <input type="text" class="dict-input" id="phonetic-input-${p}" placeholder="音标（可自动获取）">
               <input type="text" class="dict-input" id="meaning-input-${p}" placeholder="中文释义（可自动获取）">
             </div>
             <div class="word-input-row" onclick="event.stopPropagation()">
               <span class="loading hidden" id="loading-${p}">正在查词...</span>
-              <button class="btn-add-word" onclick="addWordsFromInput(${p})">添加单词</button>
+              <button class="btn-add-word" onclick="addWordsFromInput(${p})">➕ 添加单词</button>
             </div>
           </div>
         </div>
@@ -615,7 +659,7 @@
       const grid = document.getElementById('statusGrid');
       grid.innerHTML = `
         <div class="status-item">
-          <div class="status-label">新背池</div>
+          <div class="status-label">单词池</div>
           <div class="status-value">${state.newPool.length}</div>
         </div>
       `;
@@ -625,7 +669,7 @@
         if (state.reviewPools[name].length > 0) {
           grid.innerHTML += `
             <div class="status-item">
-              <div class="status-label">复习池 ${name}</div>
+              <div class="status-label">复习单词池 ${name}</div>
               <div class="status-value">${state.reviewPools[name].length}</div>
             </div>
           `;
@@ -639,7 +683,7 @@
         select.innerHTML = '<option value="">没有可复习的页码</option>';
       } else {
         nonEmptyPools.forEach(name => {
-          select.innerHTML += `<option value="${name}">复习池 ${name}（${state.reviewPools[name].length} 页）</option>`;
+          select.innerHTML += `<option value="${name}">复习单词池 ${name}（${state.reviewPools[name].length} 页）</option>`;
         });
       }
     }
@@ -719,7 +763,7 @@
 
       const uniquePages = [...new Set(pages)].sort((a, b) => a - b);
 
-      // 从新背池移除，加入复习池 1
+      // 从单词池移除，加入复习单词池 1
       state.newPool = removePages(state.newPool, uniquePages);
       addToPool('1', uniquePages);
       recordFirstDrawn(uniquePages);
@@ -727,7 +771,7 @@
       saveState();
 
       input.value = '';
-      alert(`已记录今天背诵：第 ${uniquePages.join('、')} 页，已加入复习池 1`);
+      alert(`已记录今天背诵：第 ${uniquePages.join('、')} 页，已加入复习单词池 1`);
       renderAll();
     }
 
@@ -739,7 +783,7 @@
         return;
       }
       if (state.newPool.length === 0) {
-        alert('新背池已空');
+        alert('单词池已空');
         return;
       }
 
@@ -747,7 +791,7 @@
       state.newPool = removePages(state.newPool, drawn);
       addToPool('1', drawn);
       recordFirstDrawn(drawn);
-      logAction('新背', drawn);
+      logAction('从单词池抽取', drawn);
       saveState();
 
       lastDrawnNew = drawn;
@@ -774,7 +818,7 @@
 
       const pool = state.reviewPools[poolName];
       if (!pool || pool.length === 0) {
-        alert('该复习池已空');
+        alert('该复习单词池已空');
         return;
       }
 
@@ -782,8 +826,8 @@
       lastReviewDraw = { poolName, drawn };
 
       document.getElementById('reviewResult').classList.remove('hidden');
-      document.getElementById('reviewResultTitle').textContent = `从复习池 ${poolName} 抽取`;
-      renderPageList('reviewResultList', drawn);
+      document.getElementById('reviewResultTitle').textContent = `从复习单词池 ${poolName} 抽取`;
+      renderPageList('reviewResultList', drawn, false);
       document.getElementById('moveNextBtn').style.display = 'block';
     }
 
@@ -793,10 +837,10 @@
       state.reviewPools[poolName] = removePages(state.reviewPools[poolName], drawn);
       const nextName = String(parseInt(poolName) + 1);
       addToPool(nextName, drawn);
-      logAction(`复习池 ${poolName} 完成，移入复习池 ${nextName}`, drawn);
+      logAction(`复习单词池 ${poolName} 完成，移入复习单词池 ${nextName}`, drawn);
       saveState();
 
-      alert(`已移入复习池 ${nextName}`);
+      alert(`已移入复习单词池 ${nextName}`);
       document.getElementById('reviewResult').classList.add('hidden');
       lastReviewDraw = null;
       renderAll();
