@@ -435,18 +435,11 @@
     <div class="card-title">设置</div>
     <label>单词本总页数</label>
     <input type="number" id="totalPages" value="634" min="1">
-    <button class="btn-secondary" onclick="initFromInput()">初始化 / 重置</button>
-    <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
-    <label>本地字典文件（可选）</label>
-    <div class="tip" style="margin:0 0 8px;">支持 JSON、CSV、TXT；导入后输入单词会自动带出音标和释义</div>
-    <input type="file" id="dictFile" accept=".json,.csv,.txt" onchange="importDictionary(this.files[0])">
-    <div id="dictionaryInfo" style="margin-top:8px;font-size:13px;color:#666;">未加载本地字典</div>
   </div>
 
   <div class="card">
-    <div class="card-title">今天指定背诵页面</div>
-    <label>今天背了哪几页？（用逗号分隔）</label>
-    <input type="text" id="todayPages" placeholder="例如：56,231,256">
+    <div class="card-title">指定背诵</div>
+    <input type="text" id="todayPages">
     <button class="btn-primary" onclick="recordTodayPages()">记录今天背诵</button>
     <div id="todayResult" class="result-box hidden">
       <div class="result-title">今天背诵的页面</div>
@@ -493,11 +486,6 @@
   </div>
 
   <div class="card">
-    <div class="card-title">背诵日程</div>
-    <div id="scheduleList"></div>
-  </div>
-
-  <div class="card">
     <div class="card-title">我的单词本</div>
     <div class="tip">这里列出你所有背过的页面，点击即可添加/查看单词</div>
     <div class="page-list" id="wordBookList"></div>
@@ -536,6 +524,11 @@
   </div>
 
   <div class="card">
+    <div class="card-title">背诵日程</div>
+    <div id="scheduleList"></div>
+  </div>
+
+  <div class="card">
     <div class="card-title">背单词日历</div>
     <div class="calendar-wrap">
       <div class="calendar-header">
@@ -556,10 +549,20 @@
   </div>
 
   <div class="card">
+    <div class="card-title">本地字典</div>
+    <label>导入字典文件</label>
+    <input type="file" id="dictFile" accept=".json,.csv,.txt" onchange="importDictionary(this.files[0])">
+    <div id="dictionaryInfo" style="margin-top:8px;font-size:13px;color:#666;">未加载本地字典</div>
+    <div class="tip" style="margin-top:8px;">支持 JSON、CSV、TXT；导入后输入单词会自动带出音标和释义</div>
+  </div>
+
+  <div class="card">
     <div class="card-title">数据备份</div>
     <button class="btn-primary" onclick="exportData()">导出备份</button>
     <label style="margin-top:10px;">导入备份文件</label>
     <input type="file" id="importFile" accept=".json" onchange="importData(this)">
+    <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
+    <button class="btn-danger" onclick="initFromInput()">初始化 / 重置</button>
   </div>
 
   <div class="footer">数据自动保存在本机浏览器中</div>
