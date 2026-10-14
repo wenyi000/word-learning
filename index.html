@@ -59,7 +59,7 @@
       color: #666;
       margin: 10px 0 6px;
     }
-    input[type="number"], select, input[type="text"].word-input {
+    input[type="number"], select, input[type="text"].word-input, input[type="text"].dict-input {
       width: 100%;
       padding: 12px;
       border: 1px solid #ddd;
@@ -84,15 +84,15 @@
     .btn-warning { background: #ff9500; color: #fff; }
     .btn-danger { background: #ff3b30; color: #fff; }
     .btn-secondary { background: #8e8e93; color: #fff; }
-    .btn-add-word {
+    .btn-add-word, .btn-speak {
       width: auto;
-      padding: 8px 16px;
+      padding: 8px 14px;
       margin: 0;
-      background: #007aff;
-      color: #fff;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 13px;
     }
+    .btn-add-word { background: #007aff; color: #fff; }
+    .btn-speak { background: #34c759; color: #fff; }
     .result-box {
       background: #e8f4fd;
       border-radius: 12px;
@@ -144,24 +144,57 @@
     }
     .word-list {
       display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
+      flex-direction: column;
+      gap: 8px;
       margin-bottom: 10px;
     }
     .word-tag {
       background: #f2f2f7;
-      color: #333;
-      padding: 4px 10px;
-      border-radius: 16px;
-      font-size: 13px;
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 14px;
       display: flex;
-      align-items: center;
-      gap: 6px;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
     }
-    .word-tag .delete-word {
+    .word-info {
+      flex: 1;
+    }
+    .word-text {
+      font-weight: 600;
+      color: #333;
+    }
+    .word-phonetic {
+      font-size: 13px;
+      color: #666;
+      margin-top: 2px;
+    }
+    .word-meaning {
+      font-size: 13px;
+      color: #555;
+      margin-top: 2px;
+    }
+    .word-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .delete-word {
       color: #ff3b30;
       cursor: pointer;
       font-weight: bold;
+      font-size: 18px;
+      padding: 0 4px;
+    }
+    .dict-input-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .dict-input-row .dict-input {
+      margin: 0;
     }
     .word-input-row {
       display: flex;
@@ -220,6 +253,10 @@
       border-radius: 12px;
       font-size: 12px;
     }
+    .loading {
+      font-size: 12px;
+      color: #007aff;
+    }
   </style>
 </head>
 <body>
@@ -229,9 +266,14 @@
     <div class="card-title">设置</div>
     <label>单词本总页数</label>
     <input type="number" id="totalPages" value="634" min="1">
-    <label>已背过的页码（用逗号分隔，可选）</label>
-    <input type="text" id="knownPages" placeholder="例如：56,231,256">
     <button class="btn-secondary" onclick="initFromInput()">初始化 / 重置</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">✏️ 今天指定背诵页面</div>
+    <label>今天背了哪几页？（用逗号分隔）</label>
+    <input type="text" id="todayPages" placeholder="例如：56,231,256">
+    <button class="btn-primary" onclick="recordTodayPages()">记录今天背诵</button>
   </div>
 
   <div class="card">
@@ -291,7 +333,7 @@
   <div class="footer">数据自动保存在本机浏览器中</div>
 
   <script>
-    const STORAGE_KEY = 'wordLearningState_v3';
+    const STORAGE_KEY = 'wordLearningState_v4';
     let state = null;
     let lastReviewDraw = null;
     let lastDrawnNew = null;
@@ -377,17 +419,45 @@
       return state.firstDrawnMap[page] || null;
     }
 
-    // ============== 单词管理 ==============
+    // ============== 字典功能 ==============
 
-    function getWords(page) {
-      return state.wordMap[page] || [];
+    function normalizeWordItem(item) {
+      if (typeof item === 'string') {
+        return { word: item, phonetic: '', meaning: '' };
+      }
+      return {
+        word: item.word || '',
+        phonetic: item.phonetic || '',
+        meaning: item.meaning || ''
+      };
     }
 
-    function addWords(page, words) {
-      const newWords = words.map(w => w.trim()).filter(w => w);
-      if (newWords.length === 0) return;
-      const current = getWords(page);
-      state.wordMap[page] = [...new Set([...current, ...newWords])].sort();
+    function getWords(page) {
+      const list = state.wordMap[page] || [];
+      return list.map(normalizeWordItem);
+    }
+
+    function addWordItem(page, item) {
+      const normalized = normalizeWordItem(item);
+      if (!normalized.word) return;
+      if (!state.wordMap[page]) {
+        state.wordMap[page] = [];
+      }
+      // 如果单词已存在，更新音标和释义
+      const existingIndex = state.wordMap[page].findIndex(i => {
+        const ni = normalizeWordItem(i);
+        return ni.word.toLowerCase() === normalized.word.toLowerCase();
+      });
+      if (existingIndex >= 0) {
+        const existing = normalizeWordItem(state.wordMap[page][existingIndex]);
+        state.wordMap[page][existingIndex] = {
+          word: normalized.word,
+          phonetic: normalized.phonetic || existing.phonetic,
+          meaning: normalized.meaning || existing.meaning
+        };
+      } else {
+        state.wordMap[page].push(normalized);
+      }
       saveState();
       renderPageList('newResultList', lastDrawnNew || []);
       if (lastReviewDraw) {
@@ -397,7 +467,10 @@
 
     function removeWord(page, word) {
       if (state.wordMap[page]) {
-        state.wordMap[page] = state.wordMap[page].filter(w => w !== word);
+        state.wordMap[page] = state.wordMap[page].filter(i => {
+          const ni = normalizeWordItem(i);
+          return ni.word !== word;
+        });
         if (state.wordMap[page].length === 0) {
           delete state.wordMap[page];
         }
@@ -409,6 +482,70 @@
       }
     }
 
+    async function fetchDictionary(word) {
+      try {
+        const resp = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        if (!data || !data[0]) return null;
+        const entry = data[0];
+        const phonetic = entry.phonetic || (entry.phonetics && entry.phonetics.find(p => p.text)?.text) || '';
+        let meaning = '';
+        if (entry.meanings && entry.meanings[0] && entry.meanings[0].definitions) {
+          const defs = entry.meanings[0].definitions.slice(0, 2).map(d => d.definition).join('; ');
+          meaning = defs;
+        }
+        return { phonetic, meaning };
+      } catch (e) {
+        console.error('查词失败', e);
+        return null;
+      }
+    }
+
+    async function addWordsFromInput(page) {
+      const wordInput = document.getElementById(`word-input-${page}`);
+      const phoneticInput = document.getElementById(`phonetic-input-${page}`);
+      const meaningInput = document.getElementById(`meaning-input-${page}`);
+      if (!wordInput) return;
+
+      const word = wordInput.value.trim();
+      if (!word) return;
+
+      const loadingEl = document.getElementById(`loading-${page}`);
+      if (loadingEl) loadingEl.classList.remove('hidden');
+
+      let phonetic = phoneticInput ? phoneticInput.value.trim() : '';
+      let meaning = meaningInput ? meaningInput.value.trim() : '';
+
+      // 如果没有填音标和释义，尝试自动获取
+      if (!phonetic || !meaning) {
+        const dict = await fetchDictionary(word);
+        if (dict) {
+          if (!phonetic) phonetic = dict.phonetic;
+          if (!meaning) meaning = dict.meaning;
+        }
+      }
+
+      addWordItem(page, { word, phonetic, meaning });
+
+      wordInput.value = '';
+      if (phoneticInput) phoneticInput.value = '';
+      if (meaningInput) meaningInput.value = '';
+      if (loadingEl) loadingEl.classList.add('hidden');
+    }
+
+    function speakWord(word) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(word);
+        utter.lang = 'en-US';
+        utter.rate = 0.9;
+        window.speechSynthesis.speak(utter);
+      } else {
+        alert('当前浏览器不支持语音朗读');
+      }
+    }
+
     function togglePageWords(page) {
       const section = document.getElementById(`word-section-${page}`);
       if (section) {
@@ -416,26 +553,23 @@
       }
     }
 
-    function addWordsFromInput(page) {
-      const input = document.getElementById(`word-input-${page}`);
-      if (!input) return;
-      const text = input.value;
-      if (!text.trim()) return;
-      const words = text.split(/[,，\n]/);
-      addWords(page, words);
-      input.value = '';
-    }
-
     function renderWords(page) {
       const words = getWords(page);
       if (words.length === 0) {
-        return '<div class="empty-tip">暂无单词，点击添加</div>';
+        return '<div class="empty-tip">暂无单词，点击下方添加</div>';
       }
       return words.map(w => `
-        <span class="word-tag">
-          ${w}
-          <span class="delete-word" onclick="event.stopPropagation(); removeWord(${page}, '${w.replace(/'/g, "\\'")}')">×</span>
-        </span>
+        <div class="word-tag">
+          <div class="word-info">
+            <div class="word-text">${w.word}</div>
+            ${w.phonetic ? `<div class="word-phonetic">${w.phonetic}</div>` : ''}
+            ${w.meaning ? `<div class="word-meaning">${w.meaning}</div>` : ''}
+          </div>
+          <div class="word-actions">
+            <button class="btn-speak" onclick="event.stopPropagation(); speakWord('${w.word.replace(/'/g, "\\'")}')">🔊</button>
+            <span class="delete-word" onclick="event.stopPropagation(); removeWord(${page}, '${w.word.replace(/'/g, "\\'")}')">×</span>
+          </div>
+        </div>
       `).join('');
     }
 
@@ -458,9 +592,14 @@
             <div class="word-list" id="word-list-${p}">
               ${renderWords(p)}
             </div>
+            <div class="dict-input-row" onclick="event.stopPropagation()">
+              <input type="text" class="dict-input" id="word-input-${p}" placeholder="单词">
+              <input type="text" class="dict-input" id="phonetic-input-${p}" placeholder="音标（可自动获取）">
+              <input type="text" class="dict-input" id="meaning-input-${p}" placeholder="中文释义（可自动获取）">
+            </div>
             <div class="word-input-row" onclick="event.stopPropagation()">
-              <input type="text" class="word-input" id="word-input-${p}" placeholder="输入单词，多个用逗号分隔">
-              <button class="btn-add-word" onclick="addWordsFromInput(${p})">添加</button>
+              <span class="loading hidden" id="loading-${p}">正在查词...</span>
+              <button class="btn-add-word" onclick="addWordsFromInput(${p})">添加单词</button>
             </div>
           </div>
         </div>
@@ -526,7 +665,6 @@
         return;
       }
 
-      // 按日期分组
       const groups = {};
       state.history.forEach(h => {
         const date = h.time.split(' ')[0];
@@ -561,6 +699,37 @@
     }
 
     // ============== 操作 ==============
+
+    function recordTodayPages() {
+      const input = document.getElementById('todayPages');
+      const text = input.value.trim();
+      if (!text) {
+        alert('请输入页码');
+        return;
+      }
+
+      const pages = text.split(/[,，\s]+/)
+        .map(s => parseInt(s.trim()))
+        .filter(n => !isNaN(n) && n >= 1 && n <= state.total);
+
+      if (pages.length === 0) {
+        alert('没有有效的页码');
+        return;
+      }
+
+      const uniquePages = [...new Set(pages)].sort((a, b) => a - b);
+
+      // 从新背池移除，加入复习池 1
+      state.newPool = removePages(state.newPool, uniquePages);
+      addToPool('1', uniquePages);
+      recordFirstDrawn(uniquePages);
+      logAction('今天指定背诵', uniquePages);
+      saveState();
+
+      input.value = '';
+      alert(`已记录今天背诵：第 ${uniquePages.join('、')} 页，已加入复习池 1`);
+      renderAll();
+    }
 
     function drawNew() {
       const input = document.getElementById('newDrawCount');
@@ -639,29 +808,8 @@
         alert('请输入有效的总页数');
         return;
       }
-
-      // 读取已背过的页码
-      const knownInput = document.getElementById('knownPages').value;
-      let knownPages = [];
-      if (knownInput.trim()) {
-        knownPages = knownInput.split(/[,，\s]+/)
-          .map(s => parseInt(s.trim()))
-          .filter(n => !isNaN(n) && n >= 1 && n <= total);
-        knownPages = [...new Set(knownPages)].sort((a, b) => a - b);
-      }
-
-      const knownText = knownPages.length > 0 ? `，其中第 ${knownPages.join('、')} 页标记为已背过` : '';
-
-      if (confirm(`确定要重置吗？当前进度会清空，总页数设为 ${total}${knownText}。`)) {
+      if (confirm(`确定要重置吗？当前进度会清空，总页数设为 ${total}。`)) {
         state = initState(total);
-
-        if (knownPages.length > 0) {
-          state.newPool = removePages(state.newPool, knownPages);
-          addToPool('1', knownPages);
-          recordFirstDrawn(knownPages);
-          logAction('初始化：标记已背过页码', knownPages);
-        }
-
         saveState();
         lastDrawnNew = null;
         lastReviewDraw = null;
