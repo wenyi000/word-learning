@@ -551,6 +551,19 @@
       margin-top: 2px;
     }
 
+  
+    .star-btn {
+      background: transparent;
+      border: none;
+      color: #ccc;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 4px;
+      margin: 0;
+      width: auto;
+    }
+    .star-btn.starred { color: #ffcc00; }
+
   </style>
 </head>
 <body>
@@ -620,6 +633,27 @@
     </div>
   </div>
 
+
+
+  <!-- 5. 星标池 -->
+  <div class="card">
+    <div class="card-title">星标池</div>
+    <div class="tip">在「我的单词本」里点星标，重点单词会进入这里</div>
+    <label>今天要复习几个星标单词？</label>
+    <input type="number" id="starDrawCount" value="10" min="1">
+    <button class="btn-warning" onclick="drawStarPool()">抽取星标单词</button>
+    <div id="starResult" class="result-box hidden">
+      <div class="result-title">星标复习内容</div>
+      <div class="page-list" id="starResultList"></div>
+    </div>
+    <div style="margin-top:12px;">
+      <button class="btn-secondary" onclick="toggleStarPoolList()">查看全部星标单词</button>
+    </div>
+    <div id="starPoolList" class="hidden" style="margin-top:10px;">
+      <div class="page-list" id="starPoolItems"></div>
+    </div>
+  </div>
+
   <!-- 5. 抽取复习单词池 -->
   <div class="card">
     <div class="card-title">抽取复习单词池</div>
@@ -650,6 +684,7 @@
       <label>范围</label>
       <select id="dictationScope" onchange="onDictationScopeChange()">
         <option value="all">全部单词</option>
+        <option value="star">星标池</option>
         <option value="page">指定页码</option>
         <option value="date">日期范围</option>
       </select>
@@ -811,6 +846,7 @@
         firstDrawnMap: {},
         history: [],
         dictionary: {},
+        starredWords: [],
         mediaVocab: []
       };
     }
@@ -824,6 +860,7 @@
       if (!data.firstDrawnMap) data.firstDrawnMap = {};
       if (!data.history) data.history = [];
       if (!data.dictionary) data.dictionary = {};
+      if (!data.starredWords) data.starredWords = [];
       if (!data.mediaVocab) data.mediaVocab = [];
       for (const page in data.wordMap) {
         const defaultDate = data.firstDrawnMap[page] || getTodayStr();
@@ -1507,7 +1544,9 @@
     function getDictationCandidates() {
       const scope = document.getElementById('dictationScope').value;
       const words = [];
-      if (scope === 'page') {
+      if (scope === 'star') {
+        return getStarredWordItems();
+      } else if (scope === 'page') {
         const page = parseInt(document.getElementById('dictationPage').value, 10);
         if (!page || !state.wordMap[page]) return [];
         state.wordMap[page].forEach(item => {
@@ -1657,6 +1696,105 @@
       document.getElementById('dictationSetup').classList.remove('hidden');
       document.getElementById('dictationPlay').classList.add('hidden');
       document.getElementById('dictationAnswers').classList.add('hidden');
+    }
+
+
+    // ============== 星标池 ==============
+
+    function isStarred(word) {
+      return state.starredWords.some(w => w.toLowerCase() === word.toLowerCase());
+    }
+
+    function toggleStarWord(page, word) {
+      const index = state.starredWords.findIndex(w => w.toLowerCase() === word.toLowerCase());
+      if (index >= 0) {
+        state.starredWords.splice(index, 1);
+      } else {
+        state.starredWords.push(word);
+      }
+      saveState();
+      renderAll();
+      expandPageBody(page);
+    }
+
+    function unstarWord(word) {
+      state.starredWords = state.starredWords.filter(w => w.toLowerCase() !== word.toLowerCase());
+      saveState();
+      renderAll();
+      renderStarPoolList();
+    }
+
+    function getStarredWordItems() {
+      const items = [];
+      for (const page in state.wordMap) {
+        const defaultDate = getFirstDrawn(page) || getTodayStr();
+        state.wordMap[page].forEach(item => {
+          const n = normalizeWordItem(item, defaultDate);
+          if (n.word && isStarred(n.word)) {
+            items.push({ ...n, source: `第 ${page} 页` });
+          }
+        });
+      }
+      return items;
+    }
+
+    function renderStarPoolList() {
+      const container = document.getElementById('starPoolItems');
+      if (!container) return;
+      const items = getStarredWordItems();
+      container.innerHTML = '';
+      if (items.length === 0) {
+        container.innerHTML = '<div class="empty-tip">还没有星标单词</div>';
+        return;
+      }
+      items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'page-card';
+        div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div class="word-text">${escapeHtml(item.word)}</div>
+            ${item.phonetic ? `<div class="word-phonetic">${escapeHtml(item.phonetic)}</div>` : ''}
+            ${item.meaning ? `<div class="word-meaning">${escapeHtml(item.meaning)}</div>` : ''}
+            <div class="page-meta">${escapeHtml(item.source)}</div>
+          </div>
+          <button class="star-btn starred" onclick="unstarWord('${escapeHtml(item.word).replace(/'/g, "\\'")}')">★</button>
+        </div>`;
+        container.appendChild(div);
+      });
+    }
+
+    function toggleStarPoolList() {
+      const list = document.getElementById('starPoolList');
+      if (list) {
+        list.classList.toggle('hidden');
+        if (!list.classList.contains('hidden')) renderStarPoolList();
+      }
+    }
+
+    function drawStarPool() {
+      const countInput = document.getElementById('starDrawCount');
+      const count = parseInt(countInput ? countInput.value : 10, 10) || 10;
+      const items = getStarredWordItems();
+      if (items.length === 0) {
+        alert('星标池里没有单词');
+        return;
+      }
+      const shuffled = items.slice().sort(() => Math.random() - 0.5);
+      const drawn = shuffled.slice(0, Math.min(count, shuffled.length));
+      const resultBox = document.getElementById('starResult');
+      const list = document.getElementById('starResultList');
+      if (!list) return;
+      list.innerHTML = '';
+      drawn.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'page-card';
+        div.innerHTML = `<div class="word-text">${escapeHtml(item.word)}</div>
+          ${item.phonetic ? `<div class="word-phonetic">${escapeHtml(item.phonetic)}</div>` : ''}
+          ${item.meaning ? `<div class="word-meaning">${escapeHtml(item.meaning)}</div>` : ''}
+          <div class="page-meta">${escapeHtml(item.source)}</div>`;
+        list.appendChild(div);
+      });
+      if (resultBox) resultBox.classList.remove('hidden');
     }
 
     // ============== 抽取逻辑 ==============
@@ -1814,6 +1952,7 @@
               </div>
             </div>
             <div class="word-actions">
+              <button class="star-btn ${isStarred(w.word) ? 'starred' : ''}" onclick="event.stopPropagation(); toggleStarWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">★</button>
               <button class="btn-small btn-success" onclick="event.stopPropagation(); speakWord('${escapeHtml(w.word).replace(/'/g, "\\'")}')">朗读</button>
               <span class="delete-word" onclick="event.stopPropagation(); removeWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">×</span>
             </div>`;
@@ -1891,6 +2030,7 @@
               </div>
             </div>
             <div class="word-actions">
+              <button class="star-btn ${isStarred(w.word) ? 'starred' : ''}" onclick="event.stopPropagation(); toggleStarWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">★</button>
               <button class="btn-small btn-success" onclick="event.stopPropagation(); speakWord('${escapeHtml(w.word).replace(/'/g, "\\'")}')">朗读</button>
               <span class="delete-word" onclick="event.stopPropagation(); removeWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">×</span>
             </div>`;
