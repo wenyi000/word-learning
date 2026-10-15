@@ -1371,6 +1371,7 @@
       saveState();
       renderMediaVocab();
       expandMediaEntry(sourceId, entryId);
+      expandMediaWords(sourceId, entryId);
       renderTopStatus();
       if (!phonetic || !meaning) {
         const info = await resolveWordInfo(word);
@@ -1382,6 +1383,7 @@
             saveState();
             renderMediaVocab();
             expandMediaEntry(sourceId, entryId);
+            expandMediaWords(sourceId, entryId);
           }
         }
       }
@@ -1414,6 +1416,16 @@
       const entryBody = document.getElementById(`media-entry-body-${sourceId}-${entryId}`);
       if (sourceBody) sourceBody.classList.remove('hidden');
       if (entryBody) entryBody.classList.remove('hidden');
+    }
+
+    function toggleMediaWords(sourceId, entryId) {
+      const body = document.getElementById(`media-words-body-${sourceId}-${entryId}`);
+      if (body) body.classList.toggle('hidden');
+    }
+
+    function expandMediaWords(sourceId, entryId) {
+      const body = document.getElementById(`media-words-body-${sourceId}-${entryId}`);
+      if (body) body.classList.remove('hidden');
     }
 
     function escapeHtml(text) {
@@ -1459,8 +1471,8 @@
 
         const addRow = document.createElement('div');
         addRow.className = 'media-add-row';
-        addRow.innerHTML = `<input type="date" id="media-entry-date-${source.id}" value="${getTodayStr()}">
-          <input type="text" id="media-entry-note-${source.id}" placeholder="第几集/第几章">
+        addRow.innerHTML = `<input type="text" id="media-entry-note-${source.id}" placeholder="第几集/第几章" style="flex:1;">
+          <input type="date" id="media-entry-date-${source.id}" value="${getTodayStr()}" style="flex:1;">
           <button class="btn-primary btn-small" onclick="addMediaEntry('${source.id}')">添加记录</button>`;
         body.appendChild(addRow);
 
@@ -1479,8 +1491,8 @@
             entryHeader.className = 'media-entry-header';
             entryHeader.onclick = () => toggleMediaEntry(source.id, entry.id);
             entryHeader.innerHTML = `<div>
-              <span class="media-entry-date">${entry.date}</span>
-              ${entry.note ? `<span class="media-entry-note">${escapeHtml(entry.note)}</span>` : ''}
+              <span class="media-entry-note" style="font-weight:600;color:#333;font-size:15px;">${entry.note ? escapeHtml(entry.note) : escapeHtml(entry.date)}</span>
+              ${entry.note ? `<span class="media-entry-date" style="font-size:13px;color:#999;margin-left:8px;">${entry.date}</span>` : ''}
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="word-count">${entry.words.length} 个单词</span>
@@ -1493,31 +1505,61 @@
             entryBody.className = 'media-entry-body hidden';
             entryBody.id = `media-entry-body-${source.id}-${entry.id}`;
 
+            const wordsHeader = document.createElement('div');
+            wordsHeader.className = 'page-header';
+            wordsHeader.style.padding = '4px 0';
+            wordsHeader.onclick = () => toggleMediaWords(source.id, entry.id);
+            wordsHeader.innerHTML = `<div>
+                <span class="page-title">${entry.words.length} 个单词</span>
+              </div>
+              <span class="click-hint">点击展开</span>`;
+            entryBody.appendChild(wordsHeader);
+
+            const wordsBody = document.createElement('div');
+            wordsBody.className = 'hidden';
+            wordsBody.id = `media-words-body-${source.id}-${entry.id}`;
+
+            const list = document.createElement('div');
+            list.className = 'word-list';
+            list.style.marginTop = '10px';
             if (entry.words.length === 0) {
-              entryBody.innerHTML = '<div class="empty-tip">暂无单词</div>';
+              list.innerHTML = '<div class="empty-tip">暂无单词</div>';
             } else {
-              entry.words.forEach(w => {
-                const wordItem = document.createElement('div');
-                wordItem.className = 'media-word-item';
-                wordItem.innerHTML = `<div>
-                  <span class="media-word-text">${escapeHtml(w.word)}</span>
-                  ${w.phonetic ? `<span class="media-word-phonetic">${escapeHtml(w.phonetic)}</span>` : ''}
-                  ${w.meaning ? `<div class="media-word-meaning">${escapeHtml(w.meaning)}</div>` : ''}
+              entry.words.forEach((w, idx) => {
+                const wordId = `media-${source.id}-${entry.id}-${idx}`;
+                const hasDetail = w.phonetic || w.meaning;
+                const tag = document.createElement('div');
+                tag.className = 'word-tag';
+                tag.innerHTML = `<div class="word-info">
+                  <div>
+                    <span class="word-text">${escapeHtml(w.word)}</span>
+                    ${hasDetail ? `<span class="word-detail-toggle" id="word-toggle-${wordId}" onclick="toggleWordDetail('${wordId}')">展开</span>` : ''}
+                  </div>
+                  <div id="word-detail-${wordId}" class="hidden">
+                    ${w.phonetic ? `<div class="word-phonetic">${escapeHtml(w.phonetic)}</div>` : ''}
+                    ${w.meaning ? `<div class="word-meaning">${escapeHtml(w.meaning)}</div>` : ''}
+                  </div>
                 </div>
-                <span class="media-word-delete" onclick="deleteMediaWord('${source.id}', '${entry.id}', '${escapeHtml(w.word).replace(/'/g, "\\'")}')">删除</span>`;
-                entryBody.appendChild(wordItem);
+                <div class="word-actions">
+                  <button class="star-btn ${isStarred(w.word) ? 'starred' : ''}" onclick="event.stopPropagation(); toggleStarMediaWord('${source.id}', '${entry.id}', '${escapeHtml(w.word).replace(/'/g, "\\'")}')">★</button>
+                  <button class="btn-small btn-success" onclick="event.stopPropagation(); speakWord('${escapeHtml(w.word).replace(/'/g, "\\'")}')">朗读</button>
+                  <span class="delete-word" onclick="event.stopPropagation(); deleteMediaWord('${source.id}', '${entry.id}', '${escapeHtml(w.word).replace(/'/g, "\\'")}')">×</span>
+                </div>`;
+                list.appendChild(tag);
               });
             }
+            wordsBody.appendChild(list);
 
             const wordAddRow = document.createElement('div');
-            wordAddRow.className = 'media-add-row';
+            wordAddRow.className = 'word-input-row';
             wordAddRow.style.marginTop = '10px';
             wordAddRow.innerHTML = `<input type="text" id="media-word-${source.id}-${entry.id}" placeholder="单词" class="word-input">
               <input type="text" id="media-phonetic-${source.id}-${entry.id}" placeholder="音标">
               <input type="text" id="media-meaning-${source.id}-${entry.id}" placeholder="释义">
               <button class="btn-primary btn-small" onclick="addMediaWord('${source.id}', '${entry.id}')">添加</button>`;
-            entryBody.appendChild(wordAddRow);
+            wordsBody.appendChild(wordAddRow);
 
+            entryBody.appendChild(wordsBody);
             entryCard.appendChild(entryBody);
             entryList.appendChild(entryCard);
           });
@@ -1822,7 +1864,7 @@
       return state.starredWords.some(w => w.toLowerCase() === word.toLowerCase());
     }
 
-    function toggleStarWord(page, word) {
+    function toggleStarWord(word, page) {
       const index = state.starredWords.findIndex(w => w.toLowerCase() === word.toLowerCase());
       if (index >= 0) {
         state.starredWords.splice(index, 1);
@@ -1831,7 +1873,13 @@
       }
       saveState();
       renderAll();
-      expandPageBody(page);
+      if (page) expandPageBody(page);
+    }
+
+    function toggleStarMediaWord(sourceId, entryId, word) {
+      toggleStarWord(word);
+      expandMediaEntry(sourceId, entryId);
+      expandMediaWords(sourceId, entryId);
     }
 
     function unstarWord(word) {
@@ -1852,6 +1900,21 @@
           }
         });
       }
+      state.mediaVocab.forEach(source => {
+        source.entries.forEach(entry => {
+          entry.words.forEach(w => {
+            if (w.word && isStarred(w.word)) {
+              items.push({
+                word: w.word,
+                phonetic: w.phonetic || '',
+                meaning: w.meaning || '',
+                addedAt: w.addedAt || entry.date,
+                source: source.title + (entry.note ? ' · ' + entry.note : '')
+              });
+            }
+          });
+        });
+      });
       return items;
     }
 
@@ -2161,7 +2224,7 @@
               </div>
             </div>
             <div class="word-actions">
-              <button class="star-btn ${isStarred(w.word) ? 'starred' : ''}" onclick="event.stopPropagation(); toggleStarWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">★</button>
+              <button class="star-btn ${isStarred(w.word) ? 'starred' : ''}" onclick="event.stopPropagation(); toggleStarWord('${escapeHtml(w.word).replace(/'/g, "\\'")}', ${page})">★</button>
               <button class="btn-small btn-success" onclick="event.stopPropagation(); speakWord('${escapeHtml(w.word).replace(/'/g, "\\'")}')">朗读</button>
               <span class="delete-word" onclick="event.stopPropagation(); removeWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">×</span>
             </div>`;
