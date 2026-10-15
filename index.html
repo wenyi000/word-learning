@@ -692,6 +692,7 @@
       <select id="dictationScope" onchange="onDictationScopeChange()">
         <option value="all">全部单词</option>
         <option value="star">星标池</option>
+        <option value="reading">阅读池</option>
         <option value="page">指定页码</option>
         <option value="date">日期范围</option>
       </select>
@@ -742,6 +743,25 @@
       <button class="btn-primary btn-small" onclick="addMediaSource()">添加</button>
     </div>
     <div id="mediaVocabList"></div>
+  </div>
+
+  <!-- 6.5 阅读池 -->
+  <div class="card">
+    <div class="card-title">阅读池</div>
+    <div class="tip">自动汇总「影视/电视/书本单词本」里的所有单词</div>
+    <label>今天要复习几个阅读单词？</label>
+    <input type="number" id="readingDrawCount" value="10" min="1">
+    <button class="btn-warning" onclick="drawReadingPool()">抽取阅读单词</button>
+    <div id="readingResult" class="result-box hidden">
+      <div class="result-title">阅读复习内容</div>
+      <div class="page-list" id="readingResultList"></div>
+    </div>
+    <div style="margin-top:12px;">
+      <button class="btn-secondary" onclick="toggleReadingPoolList()">查看全部阅读单词</button>
+    </div>
+    <div id="readingPoolList" class="hidden" style="margin-top:10px;">
+      <div class="page-list" id="readingPoolItems"></div>
+    </div>
   </div>
 
   <!-- 7. 我的单词本 -->
@@ -1555,6 +1575,8 @@
       const words = [];
       if (scope === 'star') {
         return getStarredWordItems();
+      } else if (scope === 'reading') {
+        return getReadingPoolItems();
       } else if (scope === 'page') {
         const page = parseInt(document.getElementById('dictationPage').value, 10);
         if (!page || !state.wordMap[page]) return [];
@@ -1817,6 +1839,93 @@
         list.appendChild(div);
       });
       if (resultBox) resultBox.classList.remove('hidden');
+    }
+
+    // ============== 阅读池 ==============
+
+    function getReadingPoolItems() {
+      const items = [];
+      state.mediaVocab.forEach(source => {
+        source.entries.forEach(entry => {
+          entry.words.forEach(w => {
+            items.push({
+              word: w.word,
+              phonetic: w.phonetic || '',
+              meaning: w.meaning || '',
+              source: source.title,
+              note: entry.note || '',
+              sourceId: source.id,
+              entryId: entry.id
+            });
+          });
+        });
+      });
+      return items;
+    }
+
+    function renderReadingPoolList() {
+      const container = document.getElementById('readingPoolItems');
+      if (!container) return;
+      const items = getReadingPoolItems();
+      container.innerHTML = '';
+      if (items.length === 0) {
+        container.innerHTML = '<div class="empty-tip">还没有阅读单词</div>';
+        return;
+      }
+      items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'page-card';
+        div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div class="word-text">${escapeHtml(item.word)}</div>
+            ${item.phonetic ? `<div class="word-phonetic">${escapeHtml(item.phonetic)}</div>` : ''}
+            ${item.meaning ? `<div class="word-meaning">${escapeHtml(item.meaning)}</div>` : ''}
+            <div class="page-meta">${escapeHtml(item.source)}${item.note ? ' · ' + escapeHtml(item.note) : ''}</div>
+          </div>
+          <button class="btn-small btn-danger" onclick="deleteReadingWord('${escapeHtml(item.word).replace(/'/g, "\\'")}', '${item.sourceId}', '${item.entryId}')">删除</button>
+        </div>`;
+        container.appendChild(div);
+      });
+    }
+
+    function toggleReadingPoolList() {
+      const list = document.getElementById('readingPoolList');
+      if (list) {
+        list.classList.toggle('hidden');
+        if (!list.classList.contains('hidden')) renderReadingPoolList();
+      }
+    }
+
+    function drawReadingPool() {
+      const countInput = document.getElementById('readingDrawCount');
+      const count = parseInt(countInput ? countInput.value : 10, 10) || 10;
+      const items = getReadingPoolItems();
+      if (items.length === 0) {
+        alert('阅读池里没有单词');
+        return;
+      }
+      const shuffled = items.slice().sort(() => Math.random() - 0.5);
+      const drawn = shuffled.slice(0, Math.min(count, shuffled.length));
+      const resultBox = document.getElementById('readingResult');
+      const list = document.getElementById('readingResultList');
+      if (!list) return;
+      list.innerHTML = '';
+      drawn.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'page-card';
+        div.innerHTML = `<div class="word-text">${escapeHtml(item.word)}</div>
+          ${item.phonetic ? `<div class="word-phonetic">${escapeHtml(item.phonetic)}</div>` : ''}
+          ${item.meaning ? `<div class="word-meaning">${escapeHtml(item.meaning)}</div>` : ''}
+          <div class="page-meta">${escapeHtml(item.source)}${item.note ? ' · ' + escapeHtml(item.note) : ''}</div>`;
+        list.appendChild(div);
+      });
+      if (resultBox) resultBox.classList.remove('hidden');
+    }
+
+    function deleteReadingWord(word, sourceId, entryId) {
+      if (!confirm(`确定从阅读池删除单词 "${word}" 吗？`)) return;
+      deleteMediaWord(sourceId, entryId, word);
+      renderReadingPoolList();
     }
 
     // ============== 抽取逻辑 ==============
