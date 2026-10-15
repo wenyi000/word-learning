@@ -1632,7 +1632,7 @@
           setTimeout(() => speakWord(w.word), 300);
         }
         if (mode === 'cn' || mode === 'both') {
-          setTimeout(() => speakChinese(w.meaning || w.word), 800);
+          setTimeout(() => speakChinese(getChineseMeaning(w.meaning) || w.word), 800);
         }
       }
     }
@@ -1645,8 +1645,21 @@
         speakWord(w.word);
       }
       if (mode === 'cn' || mode === 'both') {
-        setTimeout(() => speakChinese(w.meaning || w.word), 700);
+        setTimeout(() => speakChinese(getChineseMeaning(w.meaning) || w.word), 700);
       }
+    }
+
+    function getChineseMeaning(meaning) {
+      if (!meaning) return '';
+      // 去掉英文词性前缀如 v. / n. 等
+      let text = meaning.replace(/^[a-zA-Z]+\.\s*/, '');
+      // 按分号、逗号分割，取第一个包含中文的部分
+      const parts = text.split(/[;；,，]/);
+      for (const part of parts) {
+        const trimmed = part.trim();
+        if (/[\u4e00-\u9fa5]/.test(trimmed)) return trimmed;
+      }
+      return text.trim();
     }
 
     function speakChinese(text) {
