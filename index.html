@@ -179,6 +179,13 @@
     .word-text { font-weight: 600; color: #333; }
     .word-phonetic { font-size: 13px; color: #666; margin-top: 2px; }
     .word-meaning { font-size: 13px; color: #555; margin-top: 2px; }
+    .word-detail-toggle {
+      font-size: 12px;
+      color: #007aff;
+      cursor: pointer;
+      margin-left: 8px;
+      white-space: nowrap;
+    }
     .word-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .delete-word {
       color: #ff3b30;
@@ -1322,6 +1329,19 @@
       }
     }
 
+    function toggleWordDetail(id) {
+      const detail = document.getElementById(`word-detail-${id}`);
+      const btn = document.getElementById(`word-toggle-${id}`);
+      if (!detail || !btn) return;
+      if (detail.classList.contains('hidden')) {
+        detail.classList.remove('hidden');
+        btn.textContent = '收起';
+      } else {
+        detail.classList.add('hidden');
+        btn.textContent = '展开';
+      }
+    }
+
     function speakWord(word) {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -1468,17 +1488,24 @@
         if (words.length === 0) {
           list.innerHTML = '<div class="empty-tip">暂无单词</div>';
         } else {
-          words.forEach(w => {
+          words.forEach((w, idx) => {
+            const wordId = `${page}-${idx}`;
+            const hasDetail = w.phonetic || w.meaning;
             const tag = document.createElement('div');
             tag.className = 'word-tag';
             tag.innerHTML = `<div class="word-info">
-              <span class="word-text">${escapeHtml(w.word)}</span>
-              ${w.phonetic ? `<div class="word-phonetic">${escapeHtml(w.phonetic)}</div>` : ''}
-              ${w.meaning ? `<div class="word-meaning">${escapeHtml(w.meaning)}</div>` : ''}
+              <div>
+                <span class="word-text">${escapeHtml(w.word)}</span>
+                ${hasDetail ? `<span class="word-detail-toggle" id="word-toggle-${wordId}" onclick="toggleWordDetail('${wordId}')">展开</span>` : ''}
+              </div>
+              <div id="word-detail-${wordId}" class="hidden">
+                ${w.phonetic ? `<div class="word-phonetic">${escapeHtml(w.phonetic)}</div>` : ''}
+                ${w.meaning ? `<div class="word-meaning">${escapeHtml(w.meaning)}</div>` : ''}
+              </div>
             </div>
             <div class="word-actions">
-              <button class="btn-small btn-success" onclick="speakWord('${escapeHtml(w.word).replace(/'/g, "\\'")}')">朗读</button>
-              <span class="delete-word" onclick="removeWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">×</span>
+              <button class="btn-small btn-success" onclick="event.stopPropagation(); speakWord('${escapeHtml(w.word).replace(/'/g, "\\'")}')">朗读</button>
+              <span class="delete-word" onclick="event.stopPropagation(); removeWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">×</span>
             </div>`;
             list.appendChild(tag);
           });
@@ -1538,17 +1565,24 @@
         if (words.length === 0) {
           list.innerHTML = '<div class="empty-tip">暂无单词</div>';
         } else {
-          words.forEach(w => {
+          words.forEach((w, idx) => {
+            const wordId = `wb-${page}-${idx}`;
+            const hasDetail = w.phonetic || w.meaning;
             const tag = document.createElement('div');
             tag.className = 'word-tag';
             tag.innerHTML = `<div class="word-info">
-              <span class="word-text">${escapeHtml(w.word)}</span>
-              ${w.phonetic ? `<div class="word-phonetic">${escapeHtml(w.phonetic)}</div>` : ''}
-              ${w.meaning ? `<div class="word-meaning">${escapeHtml(w.meaning)}</div>` : ''}
+              <div>
+                <span class="word-text">${escapeHtml(w.word)}</span>
+                ${hasDetail ? `<span class="word-detail-toggle" id="word-toggle-${wordId}" onclick="toggleWordDetail('${wordId}')">展开</span>` : ''}
+              </div>
+              <div id="word-detail-${wordId}" class="hidden">
+                ${w.phonetic ? `<div class="word-phonetic">${escapeHtml(w.phonetic)}</div>` : ''}
+                ${w.meaning ? `<div class="word-meaning">${escapeHtml(w.meaning)}</div>` : ''}
+              </div>
             </div>
             <div class="word-actions">
-              <button class="btn-small btn-success" onclick="speakWord('${escapeHtml(w.word).replace(/'/g, "\\'")}')">朗读</button>
-              <span class="delete-word" onclick="removeWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">×</span>
+              <button class="btn-small btn-success" onclick="event.stopPropagation(); speakWord('${escapeHtml(w.word).replace(/'/g, "\\'")}')">朗读</button>
+              <span class="delete-word" onclick="event.stopPropagation(); removeWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">×</span>
             </div>`;
             list.appendChild(tag);
           });
