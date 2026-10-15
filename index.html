@@ -820,6 +820,7 @@
       }
       saveState();
       renderAll();
+      expandPageBody(page);
     }
 
     function removeWord(page, word) {
@@ -1464,6 +1465,11 @@
     function togglePageBody(page) {
       const body = document.getElementById(`page-body-${page}`);
       if (body) body.classList.toggle('hidden');
+    }
+
+    function expandPageBody(page) {
+      const body = document.getElementById(`page-body-${page}`);
+      if (body) body.classList.remove('hidden');
     }
 
     function renderPageList(containerId, pages, isToday = false) {
