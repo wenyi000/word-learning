@@ -660,25 +660,6 @@
 
 
 
-  <!-- 5. 星标池 -->
-  <div class="card">
-    <div class="card-title">星标池</div>
-    <div class="tip">在「我的单词本」里点星标，重点单词会进入这里</div>
-    <label>今天要复习几个星标单词？</label>
-    <input type="number" id="starDrawCount" value="10" min="1">
-    <button class="btn-warning" onclick="drawStarPool()">抽取星标单词</button>
-    <div id="starResult" class="result-box hidden">
-      <div class="result-title">星标复习内容</div>
-      <div class="page-list" id="starResultList"></div>
-    </div>
-    <div style="margin-top:12px;">
-      <button class="btn-secondary" onclick="toggleStarPoolList()">查看全部星标单词</button>
-    </div>
-    <div id="starPoolList" class="hidden" style="margin-top:10px;">
-      <div class="page-list" id="starPoolItems"></div>
-    </div>
-  </div>
-
   <!-- 5. 抽取复习单词池 -->
   <div class="card">
     <div class="card-title">抽取复习单词池</div>
@@ -746,21 +727,24 @@
       <button class="btn-secondary" onclick="resetDictation()">重新选择</button>
     </div>
   </div>
-  <!-- 6. 影视阅读单词本 -->
+
+  <!-- 6. 星标池 -->
   <div class="card">
-    <div class="card-title">影视/电视/书本单词本</div>
-    <div class="tip">按电影、电视剧、书籍分类记录生词，不计入已背单词</div>
-    <div class="media-add-row" style="margin-bottom:12px;">
-      <select id="mediaTypeInput">
-        <option value="movie">电影</option>
-        <option value="tv">电视剧</option>
-        <option value="book">书籍</option>
-        <option value="other">其他</option>
-      </select>
-      <input type="text" id="mediaTitleInput" placeholder="名称，例如：哈利波特">
-      <button class="btn-primary btn-small" onclick="addMediaSource()">添加</button>
+    <div class="card-title">星标池</div>
+    <div class="tip">在「我的单词本」里点星标，重点单词会进入这里</div>
+    <label>今天要复习几个星标单词？</label>
+    <input type="number" id="starDrawCount" value="10" min="1">
+    <button class="btn-warning" onclick="drawStarPool()">抽取星标单词</button>
+    <div id="starResult" class="result-box hidden">
+      <div class="result-title">星标复习内容</div>
+      <div class="page-list" id="starResultList"></div>
     </div>
-    <div id="mediaVocabList"></div>
+    <div style="margin-top:12px;">
+      <button class="btn-secondary" onclick="toggleStarPoolList()">查看全部星标单词</button>
+    </div>
+    <div id="starPoolList" class="hidden" style="margin-top:10px;">
+      <div class="page-list" id="starPoolItems"></div>
+    </div>
   </div>
 
   <!-- 6.5 阅读池 -->
@@ -780,6 +764,23 @@
     <div id="readingPoolList" class="hidden" style="margin-top:10px;">
       <div class="page-list" id="readingPoolItems"></div>
     </div>
+  </div>
+
+  <!-- 6. 影视阅读单词本 -->
+  <div class="card">
+    <div class="card-title">影视/电视/书本单词本</div>
+    <div class="tip">按电影、电视剧、书籍分类记录生词，不计入已背单词</div>
+    <div class="media-add-row" style="margin-bottom:12px;">
+      <select id="mediaTypeInput">
+        <option value="movie">电影</option>
+        <option value="tv">电视剧</option>
+        <option value="book">书籍</option>
+        <option value="other">其他</option>
+      </select>
+      <input type="text" id="mediaTitleInput" placeholder="名称，例如：哈利波特">
+      <button class="btn-primary btn-small" onclick="addMediaSource()">添加</button>
+    </div>
+    <div id="mediaVocabList"></div>
   </div>
 
   <!-- 7. 我的单词本 -->
