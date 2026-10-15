@@ -228,6 +228,14 @@
       color: #666;
       margin-top: 8px;
     }
+    .search-row {
+      display: flex;
+      gap: 8px;
+    }
+    .search-row input {
+      flex: 1;
+      margin: 0;
+    }
     .schedule-date {
       font-weight: 600;
       color: #333;
@@ -594,6 +602,16 @@
       </div>
       <div class="tip" style="align-self:center;">每 N 页自动归为一组，例如 100 表示 1-100 页为一组</div>
     </div>
+  </div>
+
+  <!-- 1.5 搜索单词 -->
+  <div class="card">
+    <div class="card-title">搜索单词</div>
+    <div class="tip">输入英文单词，自动搜索已背单词和本地字典</div>
+    <div class="search-row">
+      <input type="text" id="wordSearchInput" placeholder="输入英文单词" oninput="searchWord(this.value)">
+    </div>
+    <div id="wordSearchResult" class="hidden" style="margin-top:12px;"></div>
   </div>
 
   <!-- 2. 背单词日历 -->
@@ -1521,14 +1539,15 @@
       if (!word) return;
       let phonetic = phoneticInput ? phoneticInput.value.trim() : '';
       let meaning = meaningInput ? meaningInput.value.trim() : '';
-      addWordItem(page, { word, phonetic, meaning });
+      const today = getTodayStr();
+      addWordItem(page, { word, phonetic, meaning, addedAt: today });
       wordInput.value = '';
       if (phoneticInput) phoneticInput.value = '';
       if (meaningInput) meaningInput.value = '';
       if (!phonetic || !meaning) {
         const info = await resolveWordInfo(word);
         if (info && (info.phonetic || info.meaning)) {
-          addWordItem(page, { word, phonetic: info.phonetic || phonetic, meaning: info.meaning || meaning });
+          addWordItem(page, { word, phonetic: info.phonetic || phonetic, meaning: info.meaning || meaning, addedAt: today });
         }
       }
     }
@@ -1544,6 +1563,59 @@
         detail.classList.add('hidden');
         btn.textContent = '展开';
       }
+    }
+
+    function searchWord(query) {
+      const resultBox = document.getElementById('wordSearchResult');
+      if (!resultBox) return;
+      const q = query.trim().toLowerCase();
+      if (!q) {
+        resultBox.classList.add('hidden');
+        resultBox.innerHTML = '';
+        return;
+      }
+      const results = [];
+      const seen = new Set();
+      for (const page in state.wordMap) {
+        state.wordMap[page].forEach(item => {
+          const n = normalizeWordItem(item, getFirstDrawn(page) || getTodayStr());
+          if (n.word && n.word.toLowerCase().includes(q) && !seen.has(n.word.toLowerCase())) {
+            seen.add(n.word.toLowerCase());
+            results.push({ ...n, source: `第 ${page} 页` });
+          }
+        });
+      }
+      if (state.dictionary) {
+        for (const word in state.dictionary) {
+          const lower = word.toLowerCase();
+          if (lower.includes(q) && !seen.has(lower)) {
+            seen.add(lower);
+            const info = state.dictionary[word];
+            results.push({ word, phonetic: info.phonetic || '', meaning: info.meaning || '', source: '本地字典' });
+          }
+        }
+      }
+      resultBox.innerHTML = '';
+      if (results.length === 0) {
+        resultBox.innerHTML = '<div class="empty-tip">没有找到这个单词</div>';
+      } else {
+        results.slice(0, 20).forEach(r => {
+          const div = document.createElement('div');
+          div.className = 'page-card';
+          div.style.marginTop = '8px';
+          div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div class="word-text">${escapeHtml(r.word)}</div>
+              ${r.phonetic ? `<div class="word-phonetic">${escapeHtml(r.phonetic)}</div>` : ''}
+              ${r.meaning ? `<div class="word-meaning">${escapeHtml(r.meaning)}</div>` : ''}
+              <div class="page-meta">${escapeHtml(r.source)}</div>
+            </div>
+            <button class="btn-small btn-success" onclick="speakWord('${escapeHtml(r.word).replace(/'/g, "\\'")}')">朗读</button>
+          </div>`;
+          resultBox.appendChild(div);
+        });
+      }
+      resultBox.classList.remove('hidden');
     }
 
     function speakWord(word) {
@@ -2365,11 +2437,14 @@
     }
 
     function getDayWordCount(dateStr) {
-      const pages = [];
-      state.history.forEach(h => {
-        if (h.time.startsWith(dateStr)) pages.push(...h.pages);
-      });
-      return [...new Set(pages)].length;
+      let count = 0;
+      for (const page in state.wordMap) {
+        state.wordMap[page].forEach(item => {
+          const n = normalizeWordItem(item, getFirstDrawn(page) || getTodayStr());
+          if (n.word && n.addedAt === dateStr) count++;
+        });
+      }
+      return count;
     }
 
     function getPagesForDay(dateStr) {
@@ -2422,23 +2497,37 @@
       }
     }
 
+    function getWordsForDay(dateStr) {
+      const words = [];
+      for (const page in state.wordMap) {
+        state.wordMap[page].forEach(item => {
+          const n = normalizeWordItem(item, getFirstDrawn(page) || getTodayStr());
+          if (n.word && n.addedAt === dateStr) {
+            words.push({ ...n, source: `第 ${page} 页` });
+          }
+        });
+      }
+      return words;
+    }
+
     function selectDay(dateStr) {
       selectedDay = dateStr;
       renderCalendar();
       const detail = document.getElementById('selectedDayDetail');
       const title = document.getElementById('selectedDayTitle');
       const pagesEl = document.getElementById('selectedDayPages');
-      const pages = getPagesForDay(dateStr);
-      if (pages.length === 0) {
+      const words = getWordsForDay(dateStr);
+      if (words.length === 0) {
         detail.classList.add('hidden');
         return;
       }
-      title.textContent = `${dateStr} 背诵了 ${pages.length} 页`;
+      title.textContent = `${dateStr} 背诵了 ${words.length} 个单词`;
       pagesEl.innerHTML = '';
-      pages.forEach(p => {
+      words.forEach(w => {
         const span = document.createElement('span');
         span.className = 'selected-page-tag';
-        span.textContent = `第 ${p} 页`;
+        span.textContent = escapeHtml(w.word);
+        span.title = `${w.source}${w.meaning ? ' · ' + w.meaning : ''}`;
         pagesEl.appendChild(span);
       });
       detail.classList.remove('hidden');
