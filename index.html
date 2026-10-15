@@ -486,8 +486,8 @@
           <div class="status-value" id="pageStatus">0 / 0</div>
         </div>
         <div class="status-item">
-          <div class="status-label">阅读单词 / 总页数</div>
-          <div class="status-value" id="readingStatus">0 / 0</div>
+          <div class="status-label">阅读单词</div>
+          <div class="status-value" id="readingStatus">0</div>
         </div>
       </div>
     </div>
@@ -1630,7 +1630,7 @@
       const total = state.total || 0;
       const studiedPages = Object.keys(state.wordMap).length;
       document.getElementById('pageStatus').textContent = `${studiedPages} / ${total}`;
-      document.getElementById('readingStatus').textContent = `${getTotalMediaWords()} / ${total}`;
+      document.getElementById('readingStatus').textContent = `${getTotalMediaWords()}`;
     }
 
     // ============== 日程 ==============
