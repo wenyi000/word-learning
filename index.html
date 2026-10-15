@@ -587,6 +587,13 @@
         </div>
       </div>
     </div>
+    <div class="top-row" style="margin-top:12px;">
+      <div class="top-setting">
+        <label>单词本页码分组大小</label>
+        <input type="number" id="pageGroupSize" value="100" min="1" onchange="savePageGroupSize()">
+      </div>
+      <div class="tip" style="align-self:center;">每 N 页自动归为一组，例如 100 表示 1-100 页为一组</div>
+    </div>
   </div>
 
   <!-- 2. 背单词日历 -->
@@ -847,7 +854,8 @@
         history: [],
         dictionary: {},
         starredWords: [],
-        mediaVocab: []
+        mediaVocab: [],
+        pageGroupSize: 100
       };
     }
 
@@ -862,6 +870,7 @@
       if (!data.dictionary) data.dictionary = {};
       if (!data.starredWords) data.starredWords = [];
       if (!data.mediaVocab) data.mediaVocab = [];
+      if (!data.pageGroupSize) data.pageGroupSize = 100;
       for (const page in data.wordMap) {
         const defaultDate = data.firstDrawnMap[page] || getTodayStr();
         data.wordMap[page] = data.wordMap[page].map(item => {
@@ -1911,6 +1920,11 @@
       if (body) body.classList.toggle('hidden');
     }
 
+    function toggleRangeBody(idx) {
+      const body = document.getElementById(`range-body-${idx}`);
+      if (body) body.classList.toggle('hidden');
+    }
+
     function expandPageBody(page) {
       const body = document.getElementById(`page-body-${page}`);
       if (body) body.classList.remove('hidden');
@@ -1999,69 +2013,109 @@
         container.innerHTML = '<div class="empty-tip">还没有背过任何页面</div>';
         return;
       }
+
+      const groupSize = getPageGroupSize();
+      const groups = {};
       pages.forEach(page => {
+        const idx = Math.floor((page - 1) / groupSize);
+        if (!groups[idx]) {
+          groups[idx] = { pages: [], totalWords: 0, start: idx * groupSize + 1, end: (idx + 1) * groupSize };
+        }
         const words = getWords(page);
-        const firstDate = getFirstDrawn(page);
+        groups[idx].pages.push(page);
+        groups[idx].totalWords += words.length;
+      });
 
-        const card = document.createElement('div');
-        card.className = 'page-card';
+      const sortedIdx = Object.keys(groups).map(i => parseInt(i, 10)).sort((a, b) => a - b);
+      sortedIdx.forEach(idx => {
+        const group = groups[idx];
+        const rangeCard = document.createElement('div');
+        rangeCard.className = 'page-card';
 
-        const header = document.createElement('div');
-        header.className = 'page-header';
-        header.onclick = () => togglePageBody(page);
-        header.innerHTML = `<div>
-          <div class="page-title">第 ${page} 页</div>
-          <div class="page-meta">${words.length} 个单词${firstDate ? ' · 首次：' + firstDate : ''}</div>
+        const rangeHeader = document.createElement('div');
+        rangeHeader.className = 'page-header';
+        rangeHeader.onclick = () => toggleRangeBody(idx);
+        rangeHeader.innerHTML = `<div>
+          <div class="page-title">第 ${group.start}-${group.end} 页</div>
+          <div class="page-meta">${group.totalWords} 个单词 · ${group.pages.length} 个页面</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <span class="click-hint">点击展开</span>
         </div>`;
-        card.appendChild(header);
+        rangeCard.appendChild(rangeHeader);
 
-        const body = document.createElement('div');
-        body.className = 'word-section hidden';
-        body.id = `page-body-${page}`;
+        const rangeBody = document.createElement('div');
+        rangeBody.className = 'word-section hidden';
+        rangeBody.id = `range-body-${idx}`;
 
-        const list = document.createElement('div');
-        list.className = 'word-list';
-        if (words.length === 0) {
-          list.innerHTML = '<div class="empty-tip">暂无单词</div>';
-        } else {
-          words.forEach((w, idx) => {
-            const wordId = `wb-${page}-${idx}`;
-            const hasDetail = w.phonetic || w.meaning;
-            const tag = document.createElement('div');
-            tag.className = 'word-tag';
-            tag.innerHTML = `<div class="word-info">
-              <div>
-                <span class="word-text">${escapeHtml(w.word)}</span>
-                ${hasDetail ? `<span class="word-detail-toggle" id="word-toggle-${wordId}" onclick="toggleWordDetail('${wordId}')">展开</span>` : ''}
+        group.pages.forEach(page => {
+          const words = getWords(page);
+          const firstDate = getFirstDrawn(page);
+
+          const card = document.createElement('div');
+          card.className = 'page-card';
+          card.style.marginTop = '10px';
+
+          const header = document.createElement('div');
+          header.className = 'page-header';
+          header.onclick = () => togglePageBody(page);
+          header.innerHTML = `<div>
+            <div class="page-title">第 ${page} 页</div>
+            <div class="page-meta">${words.length} 个单词${firstDate ? ' · 首次：' + firstDate : ''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="click-hint">点击展开</span>
+          </div>`;
+          card.appendChild(header);
+
+          const body = document.createElement('div');
+          body.className = 'word-section hidden';
+          body.id = `page-body-${page}`;
+
+          const list = document.createElement('div');
+          list.className = 'word-list';
+          if (words.length === 0) {
+            list.innerHTML = '<div class="empty-tip">暂无单词</div>';
+          } else {
+            words.forEach((w, widx) => {
+              const wordId = `wb-${page}-${widx}`;
+              const hasDetail = w.phonetic || w.meaning;
+              const tag = document.createElement('div');
+              tag.className = 'word-tag';
+              tag.innerHTML = `<div class="word-info">
+                <div>
+                  <span class="word-text">${escapeHtml(w.word)}</span>
+                  ${hasDetail ? `<span class="word-detail-toggle" id="word-toggle-${wordId}" onclick="toggleWordDetail('${wordId}')">展开</span>` : ''}
+                </div>
+                <div id="word-detail-${wordId}" class="hidden">
+                  ${w.phonetic ? `<div class="word-phonetic">${escapeHtml(w.phonetic)}</div>` : ''}
+                  ${w.meaning ? `<div class="word-meaning">${escapeHtml(w.meaning)}</div>` : ''}
+                </div>
               </div>
-              <div id="word-detail-${wordId}" class="hidden">
-                ${w.phonetic ? `<div class="word-phonetic">${escapeHtml(w.phonetic)}</div>` : ''}
-                ${w.meaning ? `<div class="word-meaning">${escapeHtml(w.meaning)}</div>` : ''}
-              </div>
-            </div>
-            <div class="word-actions">
-              <button class="star-btn ${isStarred(w.word) ? 'starred' : ''}" onclick="event.stopPropagation(); toggleStarWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">★</button>
-              <button class="btn-small btn-success" onclick="event.stopPropagation(); speakWord('${escapeHtml(w.word).replace(/'/g, "\\'")}')">朗读</button>
-              <span class="delete-word" onclick="event.stopPropagation(); removeWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">×</span>
-            </div>`;
-            list.appendChild(tag);
-          });
-        }
-        body.appendChild(list);
+              <div class="word-actions">
+                <button class="star-btn ${isStarred(w.word) ? 'starred' : ''}" onclick="event.stopPropagation(); toggleStarWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">★</button>
+                <button class="btn-small btn-success" onclick="event.stopPropagation(); speakWord('${escapeHtml(w.word).replace(/'/g, "\\'")}')">朗读</button>
+                <span class="delete-word" onclick="event.stopPropagation(); removeWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">×</span>
+              </div>`;
+              list.appendChild(tag);
+            });
+          }
+          body.appendChild(list);
 
-        const addRow = document.createElement('div');
-        addRow.className = 'word-input-row';
-        addRow.innerHTML = `<input type="text" id="word-input-${page}" placeholder="单词" class="word-input">
-          <input type="text" id="phonetic-input-${page}" placeholder="音标">
-          <input type="text" id="meaning-input-${page}" placeholder="释义">
-          <button class="btn-primary btn-small" onclick="addWordsFromInput(${page})">添加</button>`;
-        body.appendChild(addRow);
+          const addRow = document.createElement('div');
+          addRow.className = 'word-input-row';
+          addRow.innerHTML = `<input type="text" id="word-input-${page}" placeholder="单词" class="word-input">
+            <input type="text" id="phonetic-input-${page}" placeholder="音标">
+            <input type="text" id="meaning-input-${page}" placeholder="释义">
+            <button class="btn-primary btn-small" onclick="addWordsFromInput(${page})">添加</button>`;
+          body.appendChild(addRow);
 
-        card.appendChild(body);
-        container.appendChild(card);
+          card.appendChild(body);
+          rangeBody.appendChild(card);
+        });
+
+        rangeCard.appendChild(rangeBody);
+        container.appendChild(rangeCard);
       });
     }
 
@@ -2357,9 +2411,26 @@
       }
     }
 
+    function savePageGroupSize() {
+      const input = document.getElementById('pageGroupSize');
+      const size = parseInt(input.value, 10);
+      if (isNaN(size) || size < 1) {
+        input.value = state.pageGroupSize || 100;
+        return;
+      }
+      state.pageGroupSize = size;
+      saveState();
+      renderWordBook();
+    }
+
+    function getPageGroupSize() {
+      return parseInt(state.pageGroupSize, 10) || 100;
+    }
+
     function init() {
       state = loadState();
       document.getElementById('totalPages').value = state.total;
+      document.getElementById('pageGroupSize').value = state.pageGroupSize || 100;
       renderAll();
     }
 
