@@ -1338,13 +1338,20 @@
 
     function initFromInput() {
       if (!confirm('确定要初始化吗？所有背诵记录都会被清空。')) return;
-      const totalInput = document.getElementById('totalPages');
-      const total = parseInt(totalInput ? totalInput.value : 634, 10) || 634;
+      const currentTotal = state.total || 634;
+      const input = prompt('请输入新的总页数：', String(currentTotal));
+      if (input === null) return;
+      const total = parseInt(input, 10);
+      if (isNaN(total) || total < 1) {
+        alert('请输入有效的页数');
+        return;
+      }
       state = initState(total);
       lastReviewDraw = null;
       lastDrawnNew = null;
       lastTodayPages = null;
       saveState();
+      document.getElementById('totalPages').value = total;
       renderAll();
     }
 
