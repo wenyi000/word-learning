@@ -475,6 +475,82 @@
       font-size: 13px;
       color: #555;
     }
+  
+    .dictation-mode {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      color: #333;
+      cursor: pointer;
+    }
+    .radio-label input[type="radio"] {
+      width: auto;
+      margin: 0;
+    }
+    .dictation-progress {
+      text-align: center;
+      padding: 20px 0;
+    }
+    .dictation-count {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+    .dictation-source {
+      font-size: 14px;
+      color: #666;
+      margin-top: 8px;
+      min-height: 20px;
+    }
+    .dictation-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .dictation-actions button {
+      margin: 0;
+    }
+    .dictation-hint {
+      text-align: center;
+      font-size: 13px;
+      color: #999;
+      margin-top: 12px;
+      min-height: 18px;
+    }
+    .dictation-answer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .dictation-answer-item {
+      background: #f2f2f7;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 14px;
+    }
+    .dictation-answer-word {
+      font-weight: 600;
+      color: #333;
+    }
+    .dictation-answer-phonetic {
+      font-size: 13px;
+      color: #666;
+      margin-left: 8px;
+    }
+    .dictation-answer-meaning {
+      font-size: 13px;
+      color: #555;
+      margin-top: 2px;
+    }
+
   </style>
 </head>
 <body>
@@ -559,6 +635,56 @@
     </div>
   </div>
 
+
+
+  <!-- 5.5 听写 -->
+  <div class="card">
+    <div class="card-title">听写</div>
+    <div id="dictationSetup">
+      <label>模式</label>
+      <div class="dictation-mode">
+        <label class="radio-label"><input type="radio" name="dictationMode" value="en" checked> 英文听写</label>
+        <label class="radio-label"><input type="radio" name="dictationMode" value="cn"> 中文听写</label>
+        <label class="radio-label"><input type="radio" name="dictationMode" value="both"> 中英听写</label>
+      </div>
+      <label>范围</label>
+      <select id="dictationScope" onchange="onDictationScopeChange()">
+        <option value="all">全部单词</option>
+        <option value="page">指定页码</option>
+        <option value="date">日期范围</option>
+      </select>
+      <div id="dictationPageInput" class="hidden">
+        <label>页码</label>
+        <input type="number" id="dictationPage" placeholder="输入页码">
+      </div>
+      <div id="dictationDateInput" class="hidden">
+        <label>开始日期</label>
+        <input type="date" id="dictationStartDate">
+        <label>结束日期</label>
+        <input type="date" id="dictationEndDate">
+      </div>
+      <label>数量</label>
+      <input type="number" id="dictationCount" value="20" min="1">
+      <button class="btn-primary" onclick="startDictation()">开始听写</button>
+    </div>
+    <div id="dictationPlay" class="hidden">
+      <div class="dictation-progress">
+        <div class="dictation-count">第 <span id="dictationCurrent">0</span> / <span id="dictationTotal">0</span> 个</div>
+        <div class="dictation-source" id="dictationSourceText">-</div>
+      </div>
+      <div class="dictation-actions">
+        <button class="btn-success" id="dictationPlayBtn" onclick="speakCurrentDictation()">播放 / 重播</button>
+        <button class="btn-primary" onclick="nextDictation()">下一个</button>
+        <button class="btn-warning" onclick="endDictation()">结束并显示答案</button>
+      </div>
+      <div class="dictation-hint" id="dictationHint"></div>
+    </div>
+    <div id="dictationAnswers" class="hidden">
+      <div class="result-title">答案</div>
+      <div class="dictation-answer-list" id="dictationAnswerList"></div>
+      <button class="btn-secondary" onclick="resetDictation()">重新选择</button>
+    </div>
+  </div>
   <!-- 6. 影视阅读单词本 -->
   <div class="card">
     <div class="card-title">影视/电视/书本单词本</div>
@@ -1364,6 +1490,173 @@
       } else {
         alert('当前浏览器不支持语音朗读');
       }
+    }
+
+
+    // ============== 听写 ==============
+
+    let dictationWords = [];
+    let dictationIndex = 0;
+
+    function onDictationScopeChange() {
+      const scope = document.getElementById('dictationScope').value;
+      document.getElementById('dictationPageInput').classList.toggle('hidden', scope !== 'page');
+      document.getElementById('dictationDateInput').classList.toggle('hidden', scope !== 'date');
+    }
+
+    function getDictationCandidates() {
+      const scope = document.getElementById('dictationScope').value;
+      const words = [];
+      if (scope === 'page') {
+        const page = parseInt(document.getElementById('dictationPage').value, 10);
+        if (!page || !state.wordMap[page]) return [];
+        state.wordMap[page].forEach(item => {
+          const n = normalizeWordItem(item, getFirstDrawn(page) || getTodayStr());
+          if (n.word) words.push({ ...n, source: `第 ${page} 页` });
+        });
+      } else if (scope === 'date') {
+        const start = document.getElementById('dictationStartDate').value;
+        const end = document.getElementById('dictationEndDate').value;
+        if (!start || !end) return [];
+        for (const page in state.wordMap) {
+          state.wordMap[page].forEach(item => {
+            const n = normalizeWordItem(item, getFirstDrawn(page) || getTodayStr());
+            if (n.word && n.addedAt >= start && n.addedAt <= end) {
+              words.push({ ...n, source: `第 ${page} 页` });
+            }
+          });
+        }
+        state.mediaVocab.forEach(source => {
+          source.entries.forEach(entry => {
+            if (entry.date >= start && entry.date <= end) {
+              entry.words.forEach(item => {
+                const n = normalizeWordItem(item, entry.date);
+                if (n.word) words.push({ ...n, source: `${source.title}` });
+              });
+            }
+          });
+        });
+      } else {
+        for (const page in state.wordMap) {
+          state.wordMap[page].forEach(item => {
+            const n = normalizeWordItem(item, getFirstDrawn(page) || getTodayStr());
+            if (n.word) words.push({ ...n, source: `第 ${page} 页` });
+          });
+        }
+        state.mediaVocab.forEach(source => {
+          source.entries.forEach(entry => {
+            entry.words.forEach(item => {
+              const n = normalizeWordItem(item, entry.date);
+              if (n.word) words.push({ ...n, source: `${source.title}` });
+            });
+          });
+        });
+      }
+      return words;
+    }
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function startDictation() {
+      let candidates = getDictationCandidates();
+      if (candidates.length === 0) {
+        alert('没有符合条件的单词');
+        return;
+      }
+      candidates = shuffleArray(candidates);
+      const countInput = parseInt(document.getElementById('dictationCount').value, 10) || candidates.length;
+      const count = Math.min(countInput, candidates.length);
+      dictationWords = candidates.slice(0, count);
+      dictationIndex = 0;
+
+      document.getElementById('dictationSetup').classList.add('hidden');
+      document.getElementById('dictationPlay').classList.remove('hidden');
+      document.getElementById('dictationAnswers').classList.add('hidden');
+      renderDictation();
+    }
+
+    function renderDictation() {
+      document.getElementById('dictationCurrent').textContent = dictationIndex + 1;
+      document.getElementById('dictationTotal').textContent = dictationWords.length;
+      const w = dictationWords[dictationIndex];
+      document.getElementById('dictationSourceText').textContent = w ? `来源：${w.source}` : '-';
+      document.getElementById('dictationHint').textContent = '';
+      if (w) {
+        const mode = document.querySelector('input[name="dictationMode"]:checked').value;
+        if (mode === 'en' || mode === 'both') {
+          setTimeout(() => speakWord(w.word), 300);
+        }
+        if (mode === 'cn' || mode === 'both') {
+          setTimeout(() => speakChinese(w.meaning || w.word), 800);
+        }
+      }
+    }
+
+    function speakCurrentDictation() {
+      const w = dictationWords[dictationIndex];
+      if (!w) return;
+      const mode = document.querySelector('input[name="dictationMode"]:checked').value;
+      if (mode === 'en' || mode === 'both') {
+        speakWord(w.word);
+      }
+      if (mode === 'cn' || mode === 'both') {
+        setTimeout(() => speakChinese(w.meaning || w.word), 700);
+      }
+    }
+
+    function speakChinese(text) {
+      if (!text) return;
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'zh-CN';
+        utter.rate = 0.95;
+        window.speechSynthesis.speak(utter);
+      }
+    }
+
+    function nextDictation() {
+      if (dictationIndex < dictationWords.length - 1) {
+        dictationIndex++;
+        renderDictation();
+      } else {
+        document.getElementById('dictationHint').textContent = '已经是最后一个了，可以点「结束并显示答案」';
+      }
+    }
+
+    function endDictation() {
+      document.getElementById('dictationPlay').classList.add('hidden');
+      document.getElementById('dictationAnswers').classList.remove('hidden');
+      const list = document.getElementById('dictationAnswerList');
+      list.innerHTML = '';
+      if (dictationWords.length === 0) {
+        list.innerHTML = '<div class="empty-tip">没有单词</div>';
+        return;
+      }
+      dictationWords.forEach((w, idx) => {
+        const item = document.createElement('div');
+        item.className = 'dictation-answer-item';
+        item.innerHTML = `<div>
+          <span class="dictation-answer-word">${idx + 1}. ${escapeHtml(w.word)}</span>
+          ${w.phonetic ? `<span class="dictation-answer-phonetic">${escapeHtml(w.phonetic)}</span>` : ''}
+        </div>
+        ${w.meaning ? `<div class="dictation-answer-meaning">${escapeHtml(w.meaning)}</div>` : ''}`;
+        list.appendChild(item);
+      });
+    }
+
+    function resetDictation() {
+      dictationWords = [];
+      dictationIndex = 0;
+      document.getElementById('dictationSetup').classList.remove('hidden');
+      document.getElementById('dictationPlay').classList.add('hidden');
+      document.getElementById('dictationAnswers').classList.add('hidden');
     }
 
     // ============== 抽取逻辑 ==============
