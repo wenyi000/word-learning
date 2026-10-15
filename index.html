@@ -32,6 +32,23 @@
       margin-bottom: 12px;
       color: #1c1c1e;
     }
+    .top-row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+    .top-setting label {
+      font-size: 13px;
+      margin: 0 0 4px;
+    }
+    .top-setting input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 15px;
+    }
     .status-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -49,7 +66,7 @@
       margin-bottom: 4px;
     }
     .status-value {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
       color: #007aff;
     }
@@ -59,7 +76,7 @@
       color: #666;
       margin: 10px 0 6px;
     }
-    input[type="number"], select, input[type="text"].word-input, input[type="text"].dict-input {
+    input[type="number"], select, input[type="text"], input[type="date"] {
       width: 100%;
       padding: 12px;
       border: 1px solid #ddd;
@@ -84,15 +101,13 @@
     .btn-warning { background: #ff9500; color: #fff; }
     .btn-danger { background: #ff3b30; color: #fff; }
     .btn-secondary { background: #8e8e93; color: #fff; }
-    .btn-add-word, .btn-speak {
+    .btn-small {
       width: auto;
       padding: 8px 14px;
       margin: 0;
       border-radius: 8px;
       font-size: 13px;
     }
-    .btn-add-word { background: #007aff; color: #fff; }
-    .btn-speak { background: #34c759; color: #fff; }
     .result-box {
       background: #e8f4fd;
       border-radius: 12px;
@@ -127,9 +142,7 @@
       border-radius: 8px;
       transition: background 0.2s;
     }
-    .page-header:active {
-      background: #f0f7ff;
-    }
+    .page-header:active { background: #f0f7ff; }
     .click-hint {
       font-size: 12px;
       color: #007aff;
@@ -138,19 +151,9 @@
       border-radius: 10px;
       white-space: nowrap;
     }
-    .page-title {
-      font-weight: 600;
-      color: #007aff;
-    }
-    .page-meta {
-      font-size: 12px;
-      color: #888;
-      margin-top: 2px;
-    }
-    .word-count {
-      font-size: 13px;
-      color: #666;
-    }
+    .page-title { font-weight: 600; color: #007aff; }
+    .page-meta { font-size: 12px; color: #888; margin-top: 2px; }
+    .word-count { font-size: 13px; color: #666; }
     .word-section {
       margin-top: 10px;
       padding-top: 10px;
@@ -172,28 +175,11 @@
       align-items: flex-start;
       gap: 8px;
     }
-    .word-info {
-      flex: 1;
-    }
-    .word-text {
-      font-weight: 600;
-      color: #333;
-    }
-    .word-phonetic {
-      font-size: 13px;
-      color: #666;
-      margin-top: 2px;
-    }
-    .word-meaning {
-      font-size: 13px;
-      color: #555;
-      margin-top: 2px;
-    }
-    .word-actions {
-      display: flex;
-      gap: 6px;
-      flex-shrink: 0;
-    }
+    .word-info { flex: 1; }
+    .word-text { font-weight: 600; color: #333; }
+    .word-phonetic { font-size: 13px; color: #666; margin-top: 2px; }
+    .word-meaning { font-size: 13px; color: #555; margin-top: 2px; }
+    .word-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .delete-word {
       color: #ff3b30;
       cursor: pointer;
@@ -201,34 +187,27 @@
       font-size: 18px;
       padding: 0 4px;
     }
-    .dict-input-row {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .dict-input-row .dict-input {
-      margin: 0;
-    }
     .word-input-row {
       display: flex;
       gap: 8px;
       align-items: center;
+      flex-wrap: wrap;
     }
-    .word-input-row .word-input {
+    .word-input-row input {
       flex: 1;
+      min-width: 80px;
       margin: 0;
+    }
+    .word-input-row button {
+      width: auto;
+      padding: 10px 14px;
+      margin: 0;
+      flex: 0 0 auto;
     }
     .empty-tip {
       font-size: 13px;
       color: #999;
       font-style: italic;
-    }
-    .history-item {
-      font-size: 13px;
-      color: #666;
-      padding: 6px 0;
-      border-bottom: 1px solid #eee;
     }
     .hidden { display: none; }
     .footer {
@@ -287,19 +266,9 @@
       background: #fff;
       cursor: pointer;
     }
-    .media-source-title {
-      font-weight: 600;
-      color: #333;
-    }
-    .media-source-meta {
-      font-size: 12px;
-      color: #999;
-      margin-top: 2px;
-    }
-    .media-source-body {
-      padding: 12px;
-      border-top: 1px solid #eee;
-    }
+    .media-source-title { font-weight: 600; color: #333; }
+    .media-source-meta { font-size: 12px; color: #999; margin-top: 2px; }
+    .media-source-body { padding: 12px; border-top: 1px solid #eee; }
     .media-entry-list {
       display: flex;
       flex-direction: column;
@@ -317,19 +286,9 @@
       padding: 10px 12px;
       cursor: pointer;
     }
-    .media-entry-date {
-      font-weight: 600;
-      color: #555;
-    }
-    .media-entry-note {
-      font-size: 13px;
-      color: #007aff;
-      margin-left: 8px;
-    }
-    .media-entry-body {
-      padding: 12px;
-      border-top: 1px solid #f0f0f0;
-    }
+    .media-entry-date { font-weight: 600; color: #555; }
+    .media-entry-note { font-size: 13px; color: #007aff; margin-left: 8px; }
+    .media-entry-body { padding: 12px; border-top: 1px solid #f0f0f0; }
     .media-word-item {
       display: flex;
       justify-content: space-between;
@@ -337,23 +296,10 @@
       padding: 8px 0;
       border-bottom: 1px solid #f5f5f5;
     }
-    .media-word-item:last-child {
-      border-bottom: none;
-    }
-    .media-word-text {
-      font-weight: 600;
-      color: #333;
-    }
-    .media-word-phonetic {
-      font-size: 13px;
-      color: #666;
-      margin-left: 6px;
-    }
-    .media-word-meaning {
-      font-size: 13px;
-      color: #666;
-      margin-top: 2px;
-    }
+    .media-word-item:last-child { border-bottom: none; }
+    .media-word-text { font-weight: 600; color: #333; }
+    .media-word-phonetic { font-size: 13px; color: #666; margin-left: 6px; }
+    .media-word-meaning { font-size: 13px; color: #666; margin-top: 2px; }
     .media-word-delete {
       font-size: 12px;
       color: #ff3b30;
@@ -376,10 +322,6 @@
       padding: 10px 14px;
       margin: 0;
       flex: 0 0 auto;
-    }
-    .loading {
-      font-size: 12px;
-      color: #007aff;
     }
     .stats-grid {
       display: grid;
@@ -428,19 +370,14 @@
       font-weight: 700;
       color: #007aff;
     }
-    .calendar-wrap {
-      margin-top: 16px;
-    }
+    .calendar-wrap { margin-top: 16px; }
     .calendar-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
     }
-    .calendar-month-title {
-      font-weight: 600;
-      font-size: 16px;
-    }
+    .calendar-month-title { font-weight: 600; font-size: 16px; }
     .calendar-nav {
       background: #f2f2f7;
       border: none;
@@ -477,9 +414,7 @@
       transition: transform 0.1s;
       position: relative;
     }
-    .calendar-day:active {
-      transform: scale(0.95);
-    }
+    .calendar-day:active { transform: scale(0.95); }
     .calendar-day.has-words {
       background: #d1e9ff;
       color: #007aff;
@@ -494,10 +429,7 @@
       color: #007aff;
       margin-top: 1px;
     }
-    .calendar-day.empty {
-      background: transparent;
-      cursor: default;
-    }
+    .calendar-day.empty { background: transparent; cursor: default; }
     .calendar-legend {
       display: flex;
       align-items: center;
@@ -541,33 +473,48 @@
 <body>
   <h1>背单词抽页码</h1>
 
+  <!-- 1. 设置与状态 -->
   <div class="card">
-    <div class="card-title">设置</div>
-    <label>单词本总页数</label>
-    <input type="number" id="totalPages" value="634" min="1">
-  </div>
-
-  <div class="card">
-    <div class="card-title">指定背诵</div>
-    <input type="text" id="todayPages">
-    <button class="btn-primary" onclick="recordTodayPages()">记录今天背诵</button>
-    <div id="todayResult" class="result-box hidden">
-      <div class="result-title">今天背诵的页面</div>
-      <div class="tip">点击每一页展开，即可添加单词</div>
-      <div class="page-list" id="todayResultList"></div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">当前状态</div>
-    <div class="status-grid" id="statusGrid">
-      <div class="status-item">
-        <div class="status-label">单词池</div>
-        <div class="status-value" id="newCount">0</div>
+    <div class="top-row">
+      <div class="top-setting">
+        <label>总页数</label>
+        <input type="number" id="totalPages" value="634" min="1">
+      </div>
+      <div class="status-grid">
+        <div class="status-item">
+          <div class="status-label">已背页数 / 总页数</div>
+          <div class="status-value" id="pageStatus">0 / 0</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">阅读单词 / 总页数</div>
+          <div class="status-value" id="readingStatus">0 / 0</div>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- 2. 背单词日历 -->
+  <div class="card">
+    <div class="card-title">背单词日历</div>
+    <div class="calendar-wrap">
+      <div class="calendar-header">
+        <button class="calendar-nav" onclick="changeCalendarMonth(-1)">上月</button>
+        <div class="calendar-month-title" id="calendarMonthTitle">2026年10月</div>
+        <button class="calendar-nav" onclick="changeCalendarMonth(1)">下月</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+      <div class="calendar-legend">
+        <div class="legend-box"></div>
+        <span>当天有背单词</span>
+      </div>
+      <div id="selectedDayDetail" class="selected-day-detail hidden">
+        <h4 id="selectedDayTitle"></h4>
+        <div class="selected-pages" id="selectedDayPages"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 从单词池抽取 -->
   <div class="card">
     <div class="card-title">从单词池抽取</div>
     <label>今天要抽几页？</label>
@@ -575,11 +522,22 @@
     <button class="btn-primary" onclick="drawNew()">抽取新页</button>
     <div id="newResult" class="result-box hidden">
       <div class="result-title">今天新背</div>
-      <div class="tip">点击每一页展开，即可添加单词</div>
       <div class="page-list" id="newResultList"></div>
     </div>
   </div>
 
+  <!-- 4. 指定背诵 -->
+  <div class="card">
+    <div class="card-title">指定背诵</div>
+    <input type="text" id="todayPages">
+    <button class="btn-primary" onclick="recordTodayPages()">记录今天背诵</button>
+    <div id="todayResult" class="result-box hidden">
+      <div class="result-title">今天背诵的页面</div>
+      <div class="page-list" id="todayResultList"></div>
+    </div>
+  </div>
+
+  <!-- 5. 抽取复习单词池 -->
   <div class="card">
     <div class="card-title">抽取复习单词池</div>
     <label>选择复习单词池</label>
@@ -589,21 +547,15 @@
     <button class="btn-success" onclick="drawReview()">抽取复习</button>
     <div id="reviewResult" class="result-box hidden">
       <div class="result-title" id="reviewResultTitle">复习内容</div>
-      <div class="tip">点击每一页展开，即可查看/编辑单词</div>
       <div class="page-list" id="reviewResultList"></div>
       <button class="btn-warning" id="moveNextBtn" onclick="moveToNextPool()" style="margin-top:12px;">复习完成，移入下一轮</button>
     </div>
   </div>
 
+  <!-- 6. 影视阅读单词本 -->
   <div class="card">
-    <div class="card-title">我的单词本</div>
-    <div class="tip">这里列出你所有背过的页面，点击即可添加/查看单词</div>
-    <div class="page-list" id="wordBookList"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">影视阅读单词本</div>
-    <div class="tip">按电影、电视剧、书籍分类记录生词，没填的类目不会显示</div>
+    <div class="card-title">影视/电视/书本单词本</div>
+    <div class="tip">按电影、电视剧、书籍分类记录生词，不计入已背单词</div>
     <div class="media-add-row" style="margin-bottom:12px;">
       <select id="mediaTypeInput">
         <option value="movie">电影</option>
@@ -612,11 +564,19 @@
         <option value="other">其他</option>
       </select>
       <input type="text" id="mediaTitleInput" placeholder="名称，例如：哈利波特">
-      <button class="btn-primary" onclick="addMediaSource()">添加</button>
+      <button class="btn-primary btn-small" onclick="addMediaSource()">添加</button>
     </div>
     <div id="mediaVocabList"></div>
   </div>
 
+  <!-- 7. 我的单词本 -->
+  <div class="card">
+    <div class="card-title">我的单词本</div>
+    <div class="tip">这里列出你所有背过的页面，点击即可添加/查看单词</div>
+    <div class="page-list" id="wordBookList"></div>
+  </div>
+
+  <!-- 8. 单词统计 -->
   <div class="card">
     <div class="card-title">单词统计</div>
     <div class="stats-grid">
@@ -649,31 +609,13 @@
     </div>
   </div>
 
+  <!-- 9. 背诵日程 -->
   <div class="card">
     <div class="card-title">背诵日程</div>
     <div id="scheduleList"></div>
   </div>
 
-  <div class="card">
-    <div class="card-title">背单词日历</div>
-    <div class="calendar-wrap">
-      <div class="calendar-header">
-        <button class="calendar-nav" onclick="changeCalendarMonth(-1)">上月</button>
-        <div class="calendar-month-title" id="calendarMonthTitle">2026年10月</div>
-        <button class="calendar-nav" onclick="changeCalendarMonth(1)">下月</button>
-      </div>
-      <div class="calendar-grid" id="calendarGrid"></div>
-      <div class="calendar-legend">
-        <div class="legend-box"></div>
-        <span>当天有背单词</span>
-      </div>
-      <div id="selectedDayDetail" class="selected-day-detail hidden">
-        <h4 id="selectedDayTitle"></h4>
-        <div class="selected-pages" id="selectedDayPages"></div>
-      </div>
-    </div>
-  </div>
-
+  <!-- 10. 本地字典 -->
   <div class="card">
     <div class="card-title">本地字典</div>
     <label>导入字典文件</label>
@@ -688,6 +630,7 @@
     <div class="tip" style="margin-top:8px;">加载后约有 9 万个单词，首次下载约 10MB，之后自动缓存在浏览器中</div>
   </div>
 
+  <!-- 11. 数据备份 -->
   <div class="card">
     <div class="card-title">数据备份</div>
     <button class="btn-primary" onclick="exportData()">导出备份</button>
@@ -700,13 +643,30 @@
   <div class="footer">数据自动保存在本机浏览器中</div>
 
   <script>
-    const STORAGE_KEY = 'wordLearningState_v4';
+    const STORAGE_KEY = 'wordLearningState_v5';
     let state = null;
     let lastReviewDraw = null;
     let lastDrawnNew = null;
     let lastTodayPages = null;
+    let calendarYear = new Date().getFullYear();
+    let calendarMonth = new Date().getMonth();
+    let selectedDay = null;
 
-    const DATA_VERSION = 6;
+    const DATA_VERSION = 7;
+
+    const MEDIA_TYPE_LABELS = {
+      movie: '电影',
+      tv: '电视剧',
+      book: '书籍',
+      other: '其他'
+    };
+
+    const DICT_DB_NAME = 'wordLearningDictDB_v1';
+    const DICT_STORE_NAME = 'dictionary';
+    const DICT_KEY = 'oxford';
+    const DICT_CHUNK_COUNT = 10;
+    const DICT_CHUNK_BASE = 'https://wenyi000.github.io/word-learning/dictionary_';
+    let fullDictionaryCache = null;
 
     function initState(total = 634) {
       return {
@@ -724,7 +684,6 @@
 
     function migrateState(data) {
       if (!data) return initState();
-      // 确保所有字段存在
       if (!data.version) data.version = 1;
       if (!data.newPool) data.newPool = Array.from({length: data.total || 634}, (_, i) => i + 1);
       if (!data.reviewPools) data.reviewPools = {};
@@ -733,16 +692,13 @@
       if (!data.history) data.history = [];
       if (!data.dictionary) data.dictionary = {};
       if (!data.mediaVocab) data.mediaVocab = [];
-      // 兼容旧版 wordMap（字符串数组转成对象数组，补上 addedAt）
       for (const page in data.wordMap) {
         const defaultDate = data.firstDrawnMap[page] || getTodayStr();
         data.wordMap[page] = data.wordMap[page].map(item => {
           if (typeof item === 'string') {
             return { word: item, phonetic: '', meaning: '', addedAt: defaultDate };
           }
-          if (!item.addedAt) {
-            item.addedAt = defaultDate;
-          }
+          if (!item.addedAt) item.addedAt = defaultDate;
           return item;
         });
       }
@@ -796,9 +752,7 @@
     }
 
     function addToPool(poolName, pages) {
-      if (!state.reviewPools[poolName]) {
-        state.reviewPools[poolName] = [];
-      }
+      if (!state.reviewPools[poolName]) state.reviewPools[poolName] = [];
       state.reviewPools[poolName] = [...new Set([...state.reviewPools[poolName], ...pages])].sort((a, b) => a - b);
     }
 
@@ -811,17 +765,13 @@
     function recordFirstDrawn(pages) {
       const today = getTodayStr();
       pages.forEach(page => {
-        if (!state.firstDrawnMap[page]) {
-          state.firstDrawnMap[page] = today;
-        }
+        if (!state.firstDrawnMap[page]) state.firstDrawnMap[page] = today;
       });
     }
 
     function getFirstDrawn(page) {
       return state.firstDrawnMap[page] || null;
     }
-
-    // ============== 字典功能 ==============
 
     function normalizeWordItem(item, defaultDate) {
       if (typeof item === 'string') {
@@ -845,10 +795,7 @@
       const defaultDate = getFirstDrawn(page) || getTodayStr();
       const normalized = normalizeWordItem(item, defaultDate);
       if (!normalized.word) return;
-      if (!state.wordMap[page]) {
-        state.wordMap[page] = [];
-      }
-      // 如果单词已存在，更新音标和释义
+      if (!state.wordMap[page]) state.wordMap[page] = [];
       const existingIndex = state.wordMap[page].findIndex(i => {
         const ni = normalizeWordItem(i, defaultDate);
         return ni.word.toLowerCase() === normalized.word.toLowerCase();
@@ -865,11 +812,7 @@
         state.wordMap[page].push(normalized);
       }
       saveState();
-      renderPageList('newResultList', lastDrawnNew || []);
-      if (lastReviewDraw) {
-        renderPageList('reviewResultList', lastReviewDraw.drawn);
-      }
-      renderStats();
+      renderAll();
     }
 
     function removeWord(page, word) {
@@ -879,17 +822,13 @@
           const ni = normalizeWordItem(i, defaultDate);
           return ni.word !== word;
         });
-        if (state.wordMap[page].length === 0) {
-          delete state.wordMap[page];
-        }
+        if (state.wordMap[page].length === 0) delete state.wordMap[page];
         saveState();
-        renderPageList('newResultList', lastDrawnNew || []);
-        if (lastReviewDraw) {
-          renderPageList('reviewResultList', lastReviewDraw.drawn);
-        }
-        renderStats();
+        renderAll();
       }
     }
+
+    // ============== 字典功能 ==============
 
     function lookupDictionary(word) {
       const key = word.trim().toLowerCase();
@@ -906,8 +845,7 @@
         const phonetic = entry.phonetic || (entry.phonetics && entry.phonetics.find(p => p.text)?.text) || '';
         let meaning = '';
         if (entry.meanings && entry.meanings[0] && entry.meanings[0].definitions) {
-          const defs = entry.meanings[0].definitions.slice(0, 2).map(d => d.definition).join('; ');
-          meaning = defs;
+          meaning = entry.meanings[0].definitions.slice(0, 2).map(d => d.definition).join('; ');
         }
         return { phonetic, meaning };
       } catch (e) {
@@ -917,18 +855,12 @@
     }
 
     async function resolveWordInfo(word) {
-      // 1. 用户手动导入的本地字典
       const local = lookupDictionary(word);
       if (local && (local.phonetic || local.meaning)) return local;
-
-      // 2. IndexedDB 中的完整牛津字典
       const full = await lookupFullDictionary(word);
       if (full && (full.phonetic || full.meaning)) return full;
-
-      // 3. 在线 API
       const online = await fetchOnlineDictionary(word);
       if (online) return online;
-
       return { phonetic: '', meaning: '' };
     }
 
@@ -936,8 +868,6 @@
       const dict = {};
       text = text.trim();
       if (!text) return dict;
-
-      // 尝试 JSON
       if (text.startsWith('[') || text.startsWith('{')) {
         try {
           const data = JSON.parse(text);
@@ -954,14 +884,11 @@
           return dict;
         } catch (e) {}
       }
-
-      // CSV / TSV
       const lines = text.split(/\r?\n/);
       const firstLine = lines[0].toLowerCase();
       const hasHeader = /word|单词|en|term/.test(firstLine);
       const sep = text.includes('\t') ? '\t' : ',';
       const startIndex = hasHeader ? 1 : 0;
-
       let wordIdx = 0, phoneticIdx = -1, meaningIdx = -1;
       if (hasHeader) {
         const headers = lines[0].split(sep).map(h => h.trim().toLowerCase());
@@ -970,29 +897,21 @@
         meaningIdx = headers.findIndex(h => /meaning|释义|中文|cn|def|translation/.test(h));
         if (wordIdx < 0) wordIdx = 0;
       }
-
       for (let i = startIndex; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
         const parts = line.split(sep).map(p => p.trim());
         const word = parts[wordIdx];
         if (!word) continue;
-
         let phonetic = phoneticIdx >= 0 ? parts[phoneticIdx] : '';
         let meaning = meaningIdx >= 0 ? parts[meaningIdx] : '';
-
-        // 如果没有CSV头，尝试按 /.../ 或 [...] 拆分音标
         if (!hasHeader && parts.length === 1) {
           const m = line.match(/^([^/\[\]]+?)(?:\s*\/([^/]+)\/|\s*\[([^\]]+)\])?\s+(.+)$/);
           if (m) {
-            const w = m[1].trim();
-            const p = m[2] || m[3] || '';
-            const d = m[4].trim();
-            dict[w.toLowerCase()] = { phonetic: p, meaning: d };
+            dict[m[1].trim().toLowerCase()] = { phonetic: m[2] || m[3] || '', meaning: m[4].trim() };
             continue;
           }
         }
-
         dict[word.toLowerCase()] = { phonetic, meaning };
       }
       return dict;
@@ -1030,13 +949,6 @@
 
     // ============== 完整字典（IndexedDB） ==============
 
-    const DICT_DB_NAME = 'wordLearningDictDB_v1';
-    const DICT_STORE_NAME = 'dictionary';
-    const DICT_KEY = 'oxford';
-    const DICT_CHUNK_COUNT = 10;
-    const DICT_CHUNK_BASE = 'https://wenyi000.github.io/word-learning/dictionary_';
-    let fullDictionaryCache = null;
-
     function openDictDB() {
       return new Promise((resolve, reject) => {
         if (!('indexedDB' in window)) {
@@ -1048,9 +960,7 @@
         req.onsuccess = () => resolve(req.result);
         req.onupgradeneeded = (e) => {
           const db = e.target.result;
-          if (!db.objectStoreNames.contains(DICT_STORE_NAME)) {
-            db.createObjectStore(DICT_STORE_NAME);
-          }
+          if (!db.objectStoreNames.contains(DICT_STORE_NAME)) db.createObjectStore(DICT_STORE_NAME);
         };
       });
     }
@@ -1063,7 +973,7 @@
         const req = store.put(dict, DICT_KEY);
         req.onsuccess = () => resolve();
         req.onerror = () => reject(req.error);
-        tx.oncomplete = () => { db.close(); };
+        tx.oncomplete = () => db.close();
       });
     }
 
@@ -1079,7 +989,7 @@
           resolve(fullDictionaryCache);
         };
         req.onerror = () => reject(req.error);
-        tx.oncomplete = () => { db.close(); };
+        tx.oncomplete = () => db.close();
       });
     }
 
@@ -1092,33 +1002,27 @@
         const req = store.delete(DICT_KEY);
         req.onsuccess = () => resolve();
         req.onerror = () => reject(req.error);
-        tx.oncomplete = () => { db.close(); };
+        tx.oncomplete = () => db.close();
       });
     }
 
     async function lookupFullDictionary(word) {
       const dict = await loadFullDictionaryFromDB();
       if (!dict) return null;
-      const key = word.trim().toLowerCase();
-      return dict[key] || null;
+      return dict[word.trim().toLowerCase()] || null;
     }
 
     async function loadFullDictionaryFromNetwork() {
       const btn = document.getElementById('loadFullDictBtn');
       const info = document.getElementById('fullDictInfo');
       try {
-        if (btn) {
-          btn.disabled = true;
-          btn.textContent = '正在下载字典...';
-        }
+        if (btn) { btn.disabled = true; btn.textContent = '正在下载字典...'; }
         const merged = {};
         for (let i = 0; i < DICT_CHUNK_COUNT; i++) {
           if (info) info.textContent = `正在下载第 ${i + 1}/${DICT_CHUNK_COUNT} 部分...`;
-          const url = `${DICT_CHUNK_BASE}${i}.json?nocache=${Date.now()}`;
-          const resp = await fetch(url);
+          const resp = await fetch(`${DICT_CHUNK_BASE}${i}.json?nocache=${Date.now()}`);
           if (!resp.ok) throw new Error(`第 ${i + 1} 部分下载失败：${resp.status}`);
-          const chunk = await resp.json();
-          Object.assign(merged, chunk);
+          Object.assign(merged, await resp.json());
           if (info) info.textContent = `已下载 ${Object.keys(merged).length} 个单词...`;
         }
         if (info) info.textContent = `正在保存 ${Object.keys(merged).length} 个单词...`;
@@ -1131,10 +1035,7 @@
         alert('加载完整字典失败：' + e.message);
         if (info) info.textContent = '加载失败';
       } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = '加载完整字典';
-        }
+        if (btn) { btn.disabled = false; btn.textContent = '加载完整字典'; }
       }
     }
 
@@ -1153,8 +1054,7 @@
       try {
         const dict = await loadFullDictionaryFromDB();
         if (dict) {
-          const count = Object.keys(dict).length;
-          el.textContent = `已加载 ${count} 个单词`;
+          el.textContent = `已加载 ${Object.keys(dict).length} 个单词`;
           if (loadBtn) loadBtn.classList.add('hidden');
           if (unloadBtn) unloadBtn.classList.remove('hidden');
         } else {
@@ -1171,15 +1071,16 @@
 
     // ============== 影视阅读单词本 ==============
 
-    const MEDIA_TYPE_LABELS = {
-      movie: '电影',
-      tv: '电视剧',
-      book: '书籍',
-      other: '其他'
-    };
-
     function generateId() {
       return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    }
+
+    function getMediaWordCount(source) {
+      return source.entries.reduce((sum, e) => sum + e.words.length, 0);
+    }
+
+    function getTotalMediaWords() {
+      return state.mediaVocab.reduce((sum, s) => sum + getMediaWordCount(s), 0);
     }
 
     function addMediaSource() {
@@ -1187,20 +1088,12 @@
       const titleInput = document.getElementById('mediaTitleInput');
       const type = typeInput ? typeInput.value : 'book';
       const title = titleInput ? titleInput.value.trim() : '';
-      if (!title) {
-        alert('请输入名称');
-        return;
-      }
-      state.mediaVocab.push({
-        id: generateId(),
-        type,
-        title,
-        createdAt: getTodayStr(),
-        entries: []
-      });
+      if (!title) { alert('请输入名称'); return; }
+      state.mediaVocab.push({ id: generateId(), type, title, createdAt: getTodayStr(), entries: [] });
       if (titleInput) titleInput.value = '';
       saveState();
       renderMediaVocab();
+      renderTopStatus();
     }
 
     function deleteMediaSource(id) {
@@ -1208,6 +1101,7 @@
       state.mediaVocab = state.mediaVocab.filter(s => s.id !== id);
       saveState();
       renderMediaVocab();
+      renderTopStatus();
     }
 
     function addMediaEntry(sourceId) {
@@ -1215,22 +1109,15 @@
       const noteInput = document.getElementById(`media-entry-note-${sourceId}`);
       const date = dateInput ? dateInput.value : getTodayStr();
       const note = noteInput ? noteInput.value.trim() : '';
-      if (!date) {
-        alert('请选择日期');
-        return;
-      }
+      if (!date) { alert('请选择日期'); return; }
       const source = state.mediaVocab.find(s => s.id === sourceId);
       if (!source) return;
-      source.entries.push({
-        id: generateId(),
-        date,
-        note,
-        words: []
-      });
+      source.entries.push({ id: generateId(), date, note, words: [] });
       if (dateInput) dateInput.value = getTodayStr();
       if (noteInput) noteInput.value = '';
       saveState();
       renderMediaVocab();
+      renderTopStatus();
     }
 
     function deleteMediaEntry(sourceId, entryId) {
@@ -1240,6 +1127,7 @@
       source.entries = source.entries.filter(e => e.id !== entryId);
       saveState();
       renderMediaVocab();
+      renderTopStatus();
     }
 
     async function addMediaWord(sourceId, entryId) {
@@ -1249,30 +1137,19 @@
       if (!wordInput) return;
       const word = wordInput.value.trim();
       if (!word) return;
-
       let phonetic = phoneticInput ? phoneticInput.value.trim() : '';
       let meaning = meaningInput ? meaningInput.value.trim() : '';
-
       const source = state.mediaVocab.find(s => s.id === sourceId);
       if (!source) return;
       const entry = source.entries.find(e => e.id === entryId);
       if (!entry) return;
-
-      // 先保存
-      entry.words.push({
-        word,
-        phonetic,
-        meaning,
-        addedAt: getTodayStr()
-      });
-
+      entry.words.push({ word, phonetic, meaning, addedAt: getTodayStr() });
       wordInput.value = '';
       if (phoneticInput) phoneticInput.value = '';
       if (meaningInput) meaningInput.value = '';
       saveState();
       renderMediaVocab();
-
-      // 没填音标释义的话自动补全
+      renderTopStatus();
       if (!phonetic || !meaning) {
         const info = await resolveWordInfo(word);
         if (info && (info.phonetic || info.meaning)) {
@@ -1296,6 +1173,7 @@
       entry.words = entry.words.filter(w => w.word.toLowerCase() !== word.toLowerCase());
       saveState();
       renderMediaVocab();
+      renderTopStatus();
     }
 
     function toggleMediaSource(id) {
@@ -1308,80 +1186,9 @@
       if (body) body.classList.toggle('hidden');
     }
 
-    function getMediaWordCount(source) {
-      return source.entries.reduce((sum, e) => sum + e.words.length, 0);
-    }
-
-    function renderMediaVocab() {
-      const container = document.getElementById('mediaVocabList');
-      if (!container) return;
-      if (state.mediaVocab.length === 0) {
-        container.innerHTML = '<div class="empty-tip">还没有添加任何书籍或电影</div>';
-        return;
-      }
-      container.innerHTML = state.mediaVocab.map(source => {
-        const wordCount = getMediaWordCount(source);
-        return `
-        <div class="media-source-card">
-          <div class="media-source-header" onclick="toggleMediaSource('${source.id}')">
-            <div>
-              <div class="media-source-title">${escapeHtml(source.title)}</div>
-              <div class="media-source-meta">${MEDIA_TYPE_LABELS[source.type] || source.type} · ${wordCount} 个单词 · ${source.entries.length} 条记录</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="click-hint">点击展开</span>
-              <span class="media-word-delete" onclick="event.stopPropagation(); deleteMediaSource('${source.id}')">删除</span>
-            </div>
-          </div>
-          <div class="media-source-body hidden" id="media-source-body-${source.id}">
-            <div class="media-add-row">
-              <input type="date" id="media-entry-date-${source.id}" value="${getTodayStr()}">
-              <input type="text" id="media-entry-note-${source.id}" placeholder="第几集/第几章">
-              <button class="btn-primary" onclick="addMediaEntry('${source.id}')">添加记录</button>
-            </div>
-            <div class="media-entry-list" style="margin-top:12px;">
-              ${source.entries.length === 0 ? '<div class="empty-tip">暂无记录</div>' : source.entries.map(entry => `
-                <div class="media-entry-card">
-                  <div class="media-entry-header" onclick="toggleMediaEntry('${source.id}', '${entry.id}')">
-                    <div>
-                      <span class="media-entry-date">${entry.date}</span>
-                      ${entry.note ? `<span class="media-entry-note">${escapeHtml(entry.note)}</span>` : ''}
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;">
-                      <span class="word-count">${entry.words.length} 个单词</span>
-                      <span class="click-hint">点击展开</span>
-                      <span class="media-word-delete" onclick="event.stopPropagation(); deleteMediaEntry('${source.id}', '${entry.id}')">删除</span>
-                    </div>
-                  </div>
-                  <div class="media-entry-body hidden" id="media-entry-body-${source.id}-${entry.id}">
-                    ${entry.words.length === 0 ? '<div class="empty-tip">暂无单词</div>' : entry.words.map(w => `
-                      <div class="media-word-item">
-                        <div>
-                          <span class="media-word-text">${escapeHtml(w.word)}</span>
-                          ${w.phonetic ? `<span class="media-word-phonetic">${escapeHtml(w.phonetic)}</span>` : ''}
-                          ${w.meaning ? `<div class="media-word-meaning">${escapeHtml(w.meaning)}</div>` : ''}
-                        </div>
-                        <span class="media-word-delete" onclick="deleteMediaWord('${source.id}', '${entry.id}', '${escapeHtml(w.word).replace(/'/g, "\\'")}')">删除</span>
-                      </div>
-                    `).join('')}
-                    <div class="media-add-row" style="margin-top:10px;">
-                      <input type="text" id="media-word-${source.id}-${entry.id}" placeholder="单词" class="word-input">
-                      <input type="text" id="media-phonetic-${source.id}-${entry.id}" placeholder="音标">
-                      <input type="text" id="media-meaning-${source.id}-${entry.id}" placeholder="释义">
-                      <button class="btn-add-word" onclick="addMediaWord('${source.id}', '${entry.id}')">添加</button>
-                    </div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
     function escapeHtml(text) {
       if (!text) return '';
-      return text
+      return String(text)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -1389,36 +1196,129 @@
         .replace(/'/g, '&#039;');
     }
 
+    function renderMediaVocab() {
+      const container = document.getElementById('mediaVocabList');
+      if (!container) return;
+      container.innerHTML = '';
+      if (state.mediaVocab.length === 0) {
+        container.innerHTML = '<div class="empty-tip">还没有添加任何书籍或电影</div>';
+        return;
+      }
+      state.mediaVocab.forEach(source => {
+        const wordCount = getMediaWordCount(source);
+
+        const card = document.createElement('div');
+        card.className = 'media-source-card';
+
+        const header = document.createElement('div');
+        header.className = 'media-source-header';
+        header.onclick = () => toggleMediaSource(source.id);
+        header.innerHTML = `<div>
+          <div class="media-source-title">${escapeHtml(source.title)}</div>
+          <div class="media-source-meta">${MEDIA_TYPE_LABELS[source.type] || source.type} · ${wordCount} 个单词 · ${source.entries.length} 条记录</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="click-hint">点击展开</span>
+          <span class="media-word-delete" onclick="event.stopPropagation(); deleteMediaSource('${source.id}')">删除</span>
+        </div>`;
+        card.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'media-source-body hidden';
+        body.id = `media-source-body-${source.id}`;
+
+        const addRow = document.createElement('div');
+        addRow.className = 'media-add-row';
+        addRow.innerHTML = `<input type="date" id="media-entry-date-${source.id}" value="${getTodayStr()}">
+          <input type="text" id="media-entry-note-${source.id}" placeholder="第几集/第几章">
+          <button class="btn-primary btn-small" onclick="addMediaEntry('${source.id}')">添加记录</button>`;
+        body.appendChild(addRow);
+
+        const entryList = document.createElement('div');
+        entryList.className = 'media-entry-list';
+        entryList.style.marginTop = '12px';
+
+        if (source.entries.length === 0) {
+          entryList.innerHTML = '<div class="empty-tip">暂无记录</div>';
+        } else {
+          source.entries.forEach(entry => {
+            const entryCard = document.createElement('div');
+            entryCard.className = 'media-entry-card';
+
+            const entryHeader = document.createElement('div');
+            entryHeader.className = 'media-entry-header';
+            entryHeader.onclick = () => toggleMediaEntry(source.id, entry.id);
+            entryHeader.innerHTML = `<div>
+              <span class="media-entry-date">${entry.date}</span>
+              ${entry.note ? `<span class="media-entry-note">${escapeHtml(entry.note)}</span>` : ''}
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="word-count">${entry.words.length} 个单词</span>
+              <span class="click-hint">点击展开</span>
+              <span class="media-word-delete" onclick="event.stopPropagation(); deleteMediaEntry('${source.id}', '${entry.id}')">删除</span>
+            </div>`;
+            entryCard.appendChild(entryHeader);
+
+            const entryBody = document.createElement('div');
+            entryBody.className = 'media-entry-body hidden';
+            entryBody.id = `media-entry-body-${source.id}-${entry.id}`;
+
+            if (entry.words.length === 0) {
+              entryBody.innerHTML = '<div class="empty-tip">暂无单词</div>';
+            } else {
+              entry.words.forEach(w => {
+                const wordItem = document.createElement('div');
+                wordItem.className = 'media-word-item';
+                wordItem.innerHTML = `<div>
+                  <span class="media-word-text">${escapeHtml(w.word)}</span>
+                  ${w.phonetic ? `<span class="media-word-phonetic">${escapeHtml(w.phonetic)}</span>` : ''}
+                  ${w.meaning ? `<div class="media-word-meaning">${escapeHtml(w.meaning)}</div>` : ''}
+                </div>
+                <span class="media-word-delete" onclick="deleteMediaWord('${source.id}', '${entry.id}', '${escapeHtml(w.word).replace(/'/g, "\\'")}')">删除</span>`;
+                entryBody.appendChild(wordItem);
+              });
+            }
+
+            const wordAddRow = document.createElement('div');
+            wordAddRow.className = 'media-add-row';
+            wordAddRow.style.marginTop = '10px';
+            wordAddRow.innerHTML = `<input type="text" id="media-word-${source.id}-${entry.id}" placeholder="单词" class="word-input">
+              <input type="text" id="media-phonetic-${source.id}-${entry.id}" placeholder="音标">
+              <input type="text" id="media-meaning-${source.id}-${entry.id}" placeholder="释义">
+              <button class="btn-primary btn-small" onclick="addMediaWord('${source.id}', '${entry.id}')">添加</button>`;
+            entryBody.appendChild(wordAddRow);
+
+            entryCard.appendChild(entryBody);
+            entryList.appendChild(entryCard);
+          });
+        }
+
+        body.appendChild(entryList);
+        card.appendChild(body);
+        container.appendChild(card);
+      });
+    }
+
+    // ============== 添加单词 ==============
+
     async function addWordsFromInput(page) {
       const wordInput = document.getElementById(`word-input-${page}`);
       const phoneticInput = document.getElementById(`phonetic-input-${page}`);
       const meaningInput = document.getElementById(`meaning-input-${page}`);
       if (!wordInput) return;
-
       const word = wordInput.value.trim();
       if (!word) return;
-
       let phonetic = phoneticInput ? phoneticInput.value.trim() : '';
       let meaning = meaningInput ? meaningInput.value.trim() : '';
-
-      // 先立即保存用户输入的单词，避免网络卡住导致加不进去
       addWordItem(page, { word, phonetic, meaning });
-
       wordInput.value = '';
       if (phoneticInput) phoneticInput.value = '';
       if (meaningInput) meaningInput.value = '';
-
-      // 如果用户没填音标或释义，再异步查词并更新
       if (!phonetic || !meaning) {
-        const loadingEl = document.getElementById(`loading-${page}`);
-        if (loadingEl) loadingEl.classList.remove('hidden');
         const info = await resolveWordInfo(word);
         if (info && (info.phonetic || info.meaning)) {
-          const finalPhonetic = phonetic || info.phonetic;
-          const finalMeaning = meaning || info.meaning;
-          addWordItem(page, { word, phonetic: finalPhonetic, meaning: finalMeaning });
+          addWordItem(page, { word, phonetic: info.phonetic || phonetic, meaning: info.meaning || meaning });
         }
-        if (loadingEl) loadingEl.classList.add('hidden');
       }
     }
 
@@ -1434,389 +1334,65 @@
       }
     }
 
-    function togglePageWords(page) {
-      const section = document.getElementById(`word-section-${page}`);
-      if (section) {
-        section.classList.toggle('hidden');
-      }
+    // ============== 抽取逻辑 ==============
+
+    function initFromInput() {
+      if (!confirm('确定要初始化吗？所有背诵记录都会被清空。')) return;
+      const totalInput = document.getElementById('totalPages');
+      const total = parseInt(totalInput ? totalInput.value : 634, 10) || 634;
+      state = initState(total);
+      lastReviewDraw = null;
+      lastDrawnNew = null;
+      lastTodayPages = null;
+      saveState();
+      renderAll();
     }
 
-    function renderWords(page) {
-      const words = getWords(page);
-      if (words.length === 0) {
-        return '<div class="empty-tip">暂无单词，点击下方添加</div>';
-      }
-      return words.map(w => `
-        <div class="word-tag">
-          <div class="word-info">
-            <div class="word-text">${w.word}</div>
-            ${w.phonetic ? `<div class="word-phonetic">${w.phonetic}</div>` : ''}
-            ${w.meaning ? `<div class="word-meaning">${w.meaning}</div>` : ''}
-          </div>
-          <div class="word-actions">
-            <button class="btn-speak" onclick="event.stopPropagation(); speakWord('${w.word.replace(/'/g, "\\'")}')">朗读</button>
-            <span class="delete-word" onclick="event.stopPropagation(); removeWord(${page}, '${w.word.replace(/'/g, "\\'")}')">×</span>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function renderPageList(containerId, pages, expandFirst = true) {
-      const container = document.getElementById(containerId);
-      if (!container) return;
-      container.innerHTML = pages.map((p, index) => {
-        const firstDate = getFirstDrawn(p);
-        const dateText = firstDate ? `首次抽到：${firstDate}` : '首次抽到：今天';
-        const isExpanded = expandFirst && index === 0 ? '' : 'hidden';
-        return `
-        <div class="page-card">
-          <div class="page-header" onclick="togglePageWords(${p})">
-            <div>
-              <span class="page-title">第 ${p} 页</span>
-              <div class="page-meta">${dateText}</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="word-count">${getWords(p).length} 个单词</span>
-              <span class="click-hint">点击展开</span>
-            </div>
-          </div>
-          <div class="word-section ${isExpanded}" id="word-section-${p}">
-            <div class="word-list" id="word-list-${p}">
-              ${renderWords(p)}
-            </div>
-            <div class="dict-input-row" onclick="event.stopPropagation()">
-              <input type="text" class="dict-input" id="word-input-${p}" placeholder="单词，例如：abandon">
-              <input type="text" class="dict-input" id="phonetic-input-${p}" placeholder="音标（可自动获取）">
-              <input type="text" class="dict-input" id="meaning-input-${p}" placeholder="中文释义（可自动获取）">
-            </div>
-            <div class="word-input-row" onclick="event.stopPropagation()">
-              <span class="loading hidden" id="loading-${p}">正在查词...</span>
-              <button class="btn-add-word" onclick="addWordsFromInput(${p})">添加单词</button>
-            </div>
-          </div>
-        </div>
-      `}).join('');
-    }
-
-    // ============== 页面渲染 ==============
-
-    function renderStatus() {
-      document.getElementById('totalPages').value = state.total;
-      document.getElementById('newCount').textContent = state.newPool.length;
-
-      const grid = document.getElementById('statusGrid');
-      grid.innerHTML = `
-        <div class="status-item">
-          <div class="status-label">单词池</div>
-          <div class="status-value">${state.newPool.length}</div>
-        </div>
-      `;
-
-      const poolNames = Object.keys(state.reviewPools).sort((a, b) => parseInt(a) - parseInt(b));
-      poolNames.forEach(name => {
-        if (state.reviewPools[name].length > 0) {
-          grid.innerHTML += `
-            <div class="status-item">
-              <div class="status-label">复习单词池 ${name}</div>
-              <div class="status-value">${state.reviewPools[name].length}</div>
-            </div>
-          `;
-        }
-      });
-
-      const select = document.getElementById('reviewPoolSelect');
-      select.innerHTML = '';
-      const nonEmptyPools = poolNames.filter(name => state.reviewPools[name].length > 0);
-      if (nonEmptyPools.length === 0) {
-        select.innerHTML = '<option value="">没有可复习的页码</option>';
-      } else {
-        nonEmptyPools.forEach(name => {
-          select.innerHTML += `<option value="${name}">复习单词池 ${name}（${state.reviewPools[name].length} 页）</option>`;
-        });
-      }
-    }
-
-    function renderHistory() {
-      const list = document.getElementById('historyList');
-      if (state.history.length === 0) {
-        list.innerHTML = '<div class="history-item">暂无操作记录</div>';
+    function drawNew() {
+      const countInput = document.getElementById('newDrawCount');
+      const count = parseInt(countInput.value, 10) || 5;
+      const pages = drawFromPool(state.newPool, count);
+      if (pages.length === 0) {
+        alert('单词池已经抽完了');
         return;
       }
-      list.innerHTML = state.history.slice(0, 20).map(h => `
-        <div class="history-item">
-          <strong>${h.time}</strong><br>
-          ${h.action}：${h.pages.join('、')}
-        </div>
-      `).join('');
+      recordFirstDrawn(pages);
+      state.newPool = removePages(state.newPool, pages);
+      addToPool('review1', pages);
+      logAction('抽取新页', pages);
+      lastDrawnNew = pages;
+      saveState();
+      renderAll();
     }
 
-    function renderSchedule() {
-      const container = document.getElementById('scheduleList');
-      if (state.history.length === 0) {
-        container.innerHTML = '<div class="empty-tip">暂无日程记录</div>';
+    function drawReview() {
+      const poolSelect = document.getElementById('reviewPoolSelect');
+      const poolName = poolSelect.value;
+      const countInput = document.getElementById('reviewDrawCount');
+      const count = parseInt(countInput.value, 10) || 3;
+      const pool = state.reviewPools[poolName] || [];
+      const pages = drawFromPool(pool, count);
+      if (pages.length === 0) {
+        alert('该复习池为空');
         return;
       }
-
-      const groups = {};
-      state.history.forEach(h => {
-        const date = h.time.split(' ')[0];
-        if (!groups[date]) {
-          groups[date] = [];
-        }
-        groups[date].push(h);
-      });
-
-      const dates = Object.keys(groups).sort((a, b) => new Date(b) - new Date(a));
-
-      container.innerHTML = dates.map(date => {
-        const items = groups[date];
-        return `
-          <div class="schedule-date">${date}</div>
-          ${items.map(h => `
-            <div class="schedule-action">${h.action}</div>
-            <div class="schedule-pages">
-              ${h.pages.map(p => `<span class="schedule-page">第 ${p} 页</span>`).join('')}
-            </div>
-          `).join('')}
-        `;
-      }).join('');
+      lastReviewDraw = { poolName, drawn: pages };
+      saveState();
+      renderAll();
     }
 
-    // ============== 统计功能 ==============
-
-    function getAllWordItems() {
-      const items = [];
-      for (const page in state.wordMap) {
-        const defaultDate = getFirstDrawn(page) || getTodayStr();
-        state.wordMap[page].forEach(item => {
-          const normalized = normalizeWordItem(item, defaultDate);
-          items.push({ ...normalized, page: parseInt(page) });
-        });
-      }
-      return items;
+    function moveToNextPool() {
+      if (!lastReviewDraw) return;
+      const { poolName, drawn } = lastReviewDraw;
+      const currentPool = state.reviewPools[poolName] || [];
+      state.reviewPools[poolName] = removePages(currentPool, drawn);
+      const nextPoolName = poolName === 'review1' ? 'review2' : 'review3';
+      addToPool(nextPoolName, drawn);
+      logAction(`完成${poolName}复习，移入${nextPoolName}`, drawn);
+      lastReviewDraw = null;
+      saveState();
+      renderAll();
     }
-
-    function getWordCountByDate() {
-      const counts = {};
-      const pagesByDate = {};
-      getAllWordItems().forEach(item => {
-        const date = item.addedAt;
-        counts[date] = (counts[date] || 0) + 1;
-        if (!pagesByDate[date]) pagesByDate[date] = new Set();
-        pagesByDate[date].add(item.page);
-      });
-      const result = {};
-      for (const date in counts) {
-        result[date] = {
-          count: counts[date],
-          pages: Array.from(pagesByDate[date]).sort((a, b) => a - b)
-        };
-      }
-      return result;
-    }
-
-    function countWordsInRange(startDate, endDate) {
-      const byDate = getWordCountByDate();
-      let count = 0;
-      for (const date in byDate) {
-        if (date >= startDate && date <= endDate) {
-          count += byDate[date].count;
-        }
-      }
-      return count;
-    }
-
-    function getThisWeekRange() {
-      const now = new Date();
-      const day = now.getDay();
-      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-      const monday = new Date(now.getFullYear(), now.getMonth(), diff);
-      const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
-      return [formatDate(monday), formatDate(sunday)];
-    }
-
-    function getThisMonthRange() {
-      const now = new Date();
-      const first = new Date(now.getFullYear(), now.getMonth(), 1);
-      const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      return [formatDate(first), formatDate(last)];
-    }
-
-    function formatDate(date) {
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    }
-
-    function renderStats() {
-      const byDate = getWordCountByDate();
-      const today = getTodayStr();
-      const [weekStart, weekEnd] = getThisWeekRange();
-      const [monthStart, monthEnd] = getThisMonthRange();
-
-      let total = 0;
-      let todayCount = 0;
-      let weekCount = 0;
-      let monthCount = 0;
-
-      for (const date in byDate) {
-        const c = byDate[date].count;
-        total += c;
-        if (date === today) todayCount += c;
-        if (date >= weekStart && date <= weekEnd) weekCount += c;
-        if (date >= monthStart && date <= monthEnd) monthCount += c;
-      }
-
-      document.getElementById('statTotal').textContent = total;
-      document.getElementById('statThisWeek').textContent = weekCount;
-      document.getElementById('statThisMonth').textContent = monthCount;
-      document.getElementById('statToday').textContent = todayCount;
-    }
-
-    function queryDateRange() {
-      const start = document.getElementById('queryStartDate').value;
-      const end = document.getElementById('queryEndDate').value;
-      if (!start || !end) {
-        alert('请选择开始和结束日期');
-        return;
-      }
-      if (start > end) {
-        alert('开始日期不能晚于结束日期');
-        return;
-      }
-      const count = countWordsInRange(start, end);
-      document.getElementById('queryResult').classList.remove('hidden');
-      document.getElementById('queryResultNumber').textContent = count;
-      document.getElementById('queryResultLabel').textContent = `${start} 至 ${end} 共背了`;
-    }
-
-    // ============== 日历功能 ==============
-
-    let calendarCurrentDate = new Date();
-    let selectedCalendarDate = null;
-
-    function renderCalendar() {
-      const year = calendarCurrentDate.getFullYear();
-      const month = calendarCurrentDate.getMonth();
-      document.getElementById('calendarMonthTitle').textContent = `${year}年${month + 1}月`;
-
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      const startWeekDay = firstDay.getDay();
-      const daysInMonth = lastDay.getDate();
-
-      const byDate = getWordCountByDate();
-      const grid = document.getElementById('calendarGrid');
-      grid.innerHTML = '';
-
-      const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-      weekdays.forEach(wd => {
-        grid.innerHTML += `<div class="calendar-weekday">${wd}</div>`;
-      });
-
-      // 空白
-      for (let i = 0; i < startWeekDay; i++) {
-        grid.innerHTML += `<div class="calendar-day empty"></div>`;
-      }
-
-      for (let d = 1; d <= daysInMonth; d++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const dayData = byDate[dateStr];
-        const hasWords = dayData && dayData.count > 0;
-        const isSelected = selectedCalendarDate === dateStr;
-        const cls = `calendar-day ${hasWords ? 'has-words' : ''} ${isSelected ? 'selected' : ''}`;
-        const countHtml = hasWords ? `<span class="day-count">${dayData.count}</span>` : '';
-        grid.innerHTML += `<div class="${cls}" onclick="selectCalendarDate('${dateStr}')"><span>${d}</span>${countHtml}</div>`;
-      }
-    }
-
-    function changeCalendarMonth(delta) {
-      calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + delta);
-      renderCalendar();
-    }
-
-    function selectCalendarDate(dateStr) {
-      selectedCalendarDate = dateStr;
-      renderCalendar();
-      const byDate = getWordCountByDate();
-      const dayData = byDate[dateStr];
-      const detail = document.getElementById('selectedDayDetail');
-      const title = document.getElementById('selectedDayTitle');
-      const pagesDiv = document.getElementById('selectedDayPages');
-
-      if (dayData) {
-        detail.classList.remove('hidden');
-        title.textContent = `${dateStr} 背了 ${dayData.count} 个单词，涉及 ${dayData.pages.length} 页`;
-        pagesDiv.innerHTML = dayData.pages.map(p => `<span class="selected-page-tag">第 ${p} 页</span>`).join('');
-      } else {
-        detail.classList.remove('hidden');
-        title.textContent = `${dateStr} 没有背单词`;
-        pagesDiv.innerHTML = '';
-      }
-    }
-
-    function renderWordBook() {
-      const container = document.getElementById('wordBookList');
-      if (!container) return;
-
-      const allPages = new Set();
-      Object.values(state.reviewPools).forEach(pool => pool.forEach(p => allPages.add(p)));
-      Object.keys(state.wordMap).forEach(p => allPages.add(parseInt(p)));
-
-      const sortedPages = Array.from(allPages).sort((a, b) => a - b);
-
-      if (sortedPages.length === 0) {
-        container.innerHTML = '<div class="empty-tip">还没有背过任何页面，先抽取或记录今天背诵吧</div>';
-        return;
-      }
-
-      container.innerHTML = sortedPages.map(p => {
-        const firstDate = getFirstDrawn(p);
-        const dateText = firstDate ? `首次抽到：${firstDate}` : '';
-        const wordCount = getWords(p).length;
-        return `
-        <div class="page-card">
-          <div class="page-header" onclick="togglePageWords(${p})">
-            <div>
-              <span class="page-title">第 ${p} 页</span>
-              ${dateText ? `<div class="page-meta">${dateText}</div>` : ''}
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="word-count">${wordCount} 个单词</span>
-              <span class="click-hint">点击展开</span>
-            </div>
-          </div>
-          <div class="word-section hidden" id="word-section-${p}">
-            <div class="word-list" id="word-list-${p}">
-              ${renderWords(p)}
-            </div>
-            <div class="dict-input-row" onclick="event.stopPropagation()">
-              <input type="text" class="dict-input" id="word-input-${p}" placeholder="单词，例如：abandon">
-              <input type="text" class="dict-input" id="phonetic-input-${p}" placeholder="音标（可自动获取）">
-              <input type="text" class="dict-input" id="meaning-input-${p}" placeholder="中文释义（可自动获取）">
-            </div>
-            <div class="word-input-row" onclick="event.stopPropagation()">
-              <span class="loading hidden" id="loading-${p}">正在查词...</span>
-              <button class="btn-add-word" onclick="addWordsFromInput(${p})">添加单词</button>
-            </div>
-          </div>
-        </div>
-      `}).join('');
-    }
-
-    function renderAll() {
-      renderStatus();
-      renderWordBook();
-      renderMediaVocab();
-      renderSchedule();
-      renderStats();
-      renderCalendar();
-      renderDictionaryInfo();
-      renderFullDictInfo();
-      if (lastDrawnNew) renderPageList('newResultList', lastDrawnNew);
-      if (lastReviewDraw) renderPageList('reviewResultList', lastReviewDraw.drawn);
-      if (lastTodayPages) renderPageList('todayResultList', lastTodayPages, true);
-    }
-
-    // ============== 操作 ==============
 
     function recordTodayPages() {
       const input = document.getElementById('todayPages');
@@ -1825,131 +1401,409 @@
         alert('请输入页码');
         return;
       }
-
       const pages = text.split(/[,，\s]+/)
-        .map(s => parseInt(s.trim()))
+        .map(s => parseInt(s.trim(), 10))
         .filter(n => !isNaN(n) && n >= 1 && n <= state.total);
-
-      if (pages.length === 0) {
+      const unique = [...new Set(pages)].sort((a, b) => a - b);
+      if (unique.length === 0) {
         alert('没有有效的页码');
         return;
       }
-
-      const uniquePages = [...new Set(pages)].sort((a, b) => a - b);
-
-      // 从单词池移除，加入复习单词池 1
-      state.newPool = removePages(state.newPool, uniquePages);
-      addToPool('1', uniquePages);
-      recordFirstDrawn(uniquePages);
-      logAction('今天指定背诵', uniquePages);
-      saveState();
-
+      recordFirstDrawn(unique);
+      unique.forEach(p => {
+        if (!state.wordMap[p]) state.wordMap[p] = [];
+      });
+      state.newPool = removePages(state.newPool, unique);
+      logAction('指定背诵', unique);
+      lastTodayPages = unique;
       input.value = '';
-      lastTodayPages = uniquePages;
-
-      document.getElementById('todayResult').classList.remove('hidden');
-      renderPageList('todayResultList', uniquePages, true);
-
-      alert(`已记录今天背诵：第 ${uniquePages.join('、')} 页，已加入复习单词池 1`);
-      renderAll();
-    }
-
-    function drawNew() {
-      const input = document.getElementById('newDrawCount');
-      const count = parseInt(input.value);
-      if (isNaN(count) || count <= 0) {
-        alert('请输入有效的抽取数量');
-        return;
-      }
-      if (state.newPool.length === 0) {
-        alert('单词池已空');
-        return;
-      }
-
-      const drawn = drawFromPool(state.newPool, count);
-      state.newPool = removePages(state.newPool, drawn);
-      addToPool('1', drawn);
-      recordFirstDrawn(drawn);
-      logAction('从单词池抽取', drawn);
       saveState();
-
-      lastDrawnNew = drawn;
-
-      document.getElementById('newResult').classList.remove('hidden');
-      renderPageList('newResultList', drawn);
       renderAll();
     }
 
-    function drawReview() {
+    // ============== 渲染页面列表 ==============
+
+    function togglePageBody(page) {
+      const body = document.getElementById(`page-body-${page}`);
+      if (body) body.classList.toggle('hidden');
+    }
+
+    function renderPageList(containerId, pages, isToday = false) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      if (pages.length === 0) return;
+      pages.forEach(page => {
+        const words = getWords(page);
+        const firstDate = getFirstDrawn(page);
+
+        const card = document.createElement('div');
+        card.className = 'page-card';
+
+        const header = document.createElement('div');
+        header.className = 'page-header';
+        header.onclick = () => togglePageBody(page);
+        header.innerHTML = `<div>
+          <div class="page-title">第 ${page} 页</div>
+          <div class="page-meta">${words.length} 个单词${firstDate ? ' · 首次：' + firstDate : ''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="click-hint">点击展开</span>
+        </div>`;
+        card.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'word-section hidden';
+        body.id = `page-body-${page}`;
+
+        const list = document.createElement('div');
+        list.className = 'word-list';
+        if (words.length === 0) {
+          list.innerHTML = '<div class="empty-tip">暂无单词</div>';
+        } else {
+          words.forEach(w => {
+            const tag = document.createElement('div');
+            tag.className = 'word-tag';
+            tag.innerHTML = `<div class="word-info">
+              <span class="word-text">${escapeHtml(w.word)}</span>
+              ${w.phonetic ? `<div class="word-phonetic">${escapeHtml(w.phonetic)}</div>` : ''}
+              ${w.meaning ? `<div class="word-meaning">${escapeHtml(w.meaning)}</div>` : ''}
+            </div>
+            <div class="word-actions">
+              <button class="btn-small btn-success" onclick="speakWord('${escapeHtml(w.word).replace(/'/g, "\\'")}')">朗读</button>
+              <span class="delete-word" onclick="removeWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">×</span>
+            </div>`;
+            list.appendChild(tag);
+          });
+        }
+        body.appendChild(list);
+
+        const addRow = document.createElement('div');
+        addRow.className = 'word-input-row';
+        addRow.innerHTML = `<input type="text" id="word-input-${page}" placeholder="单词" class="word-input">
+          <input type="text" id="phonetic-input-${page}" placeholder="音标">
+          <input type="text" id="meaning-input-${page}" placeholder="释义">
+          <button class="btn-primary btn-small" onclick="addWordsFromInput(${page})">添加</button>`;
+        body.appendChild(addRow);
+
+        card.appendChild(body);
+        container.appendChild(card);
+      });
+    }
+
+    function renderWordBook() {
+      const container = document.getElementById('wordBookList');
+      if (!container) return;
+      const pages = Object.keys(state.wordMap)
+        .map(p => parseInt(p, 10))
+        .filter(p => !isNaN(p))
+        .sort((a, b) => a - b);
+      container.innerHTML = '';
+      if (pages.length === 0) {
+        container.innerHTML = '<div class="empty-tip">还没有背过任何页面</div>';
+        return;
+      }
+      pages.forEach(page => {
+        const words = getWords(page);
+        const firstDate = getFirstDrawn(page);
+
+        const card = document.createElement('div');
+        card.className = 'page-card';
+
+        const header = document.createElement('div');
+        header.className = 'page-header';
+        header.onclick = () => togglePageBody(page);
+        header.innerHTML = `<div>
+          <div class="page-title">第 ${page} 页</div>
+          <div class="page-meta">${words.length} 个单词${firstDate ? ' · 首次：' + firstDate : ''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="click-hint">点击展开</span>
+        </div>`;
+        card.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'word-section hidden';
+        body.id = `page-body-${page}`;
+
+        const list = document.createElement('div');
+        list.className = 'word-list';
+        if (words.length === 0) {
+          list.innerHTML = '<div class="empty-tip">暂无单词</div>';
+        } else {
+          words.forEach(w => {
+            const tag = document.createElement('div');
+            tag.className = 'word-tag';
+            tag.innerHTML = `<div class="word-info">
+              <span class="word-text">${escapeHtml(w.word)}</span>
+              ${w.phonetic ? `<div class="word-phonetic">${escapeHtml(w.phonetic)}</div>` : ''}
+              ${w.meaning ? `<div class="word-meaning">${escapeHtml(w.meaning)}</div>` : ''}
+            </div>
+            <div class="word-actions">
+              <button class="btn-small btn-success" onclick="speakWord('${escapeHtml(w.word).replace(/'/g, "\\'")}')">朗读</button>
+              <span class="delete-word" onclick="removeWord(${page}, '${escapeHtml(w.word).replace(/'/g, "\\'")}')">×</span>
+            </div>`;
+            list.appendChild(tag);
+          });
+        }
+        body.appendChild(list);
+
+        const addRow = document.createElement('div');
+        addRow.className = 'word-input-row';
+        addRow.innerHTML = `<input type="text" id="word-input-${page}" placeholder="单词" class="word-input">
+          <input type="text" id="phonetic-input-${page}" placeholder="音标">
+          <input type="text" id="meaning-input-${page}" placeholder="释义">
+          <button class="btn-primary btn-small" onclick="addWordsFromInput(${page})">添加</button>`;
+        body.appendChild(addRow);
+
+        card.appendChild(body);
+        container.appendChild(card);
+      });
+    }
+
+    // ============== 统计 ==============
+
+    function getAllStudyWords() {
+      const words = [];
+      for (const page in state.wordMap) {
+        const defaultDate = getFirstDrawn(page) || getTodayStr();
+        state.wordMap[page].forEach(item => {
+          words.push(normalizeWordItem(item, defaultDate));
+        });
+      }
+      return words;
+    }
+
+    function isDateInRange(dateStr, start, end) {
+      if (!dateStr) return false;
+      return dateStr >= start && dateStr <= end;
+    }
+
+    function getWeekRange(offset = 0) {
+      const d = new Date();
+      d.setDate(d.getDate() - d.getDay() + 1 + offset * 7);
+      const start = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      d.setDate(d.getDate() + 6);
+      const end = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return { start, end };
+    }
+
+    function getMonthRange(offset = 0) {
+      const d = new Date();
+      d.setMonth(d.getMonth() + offset);
+      const year = d.getFullYear();
+      const month = d.getMonth() + 1;
+      const start = `${year}-${String(month).padStart(2, '0')}-01`;
+      const lastDay = new Date(year, month, 0).getDate();
+      const end = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      return { start, end };
+    }
+
+    function renderStats() {
+      const words = getAllStudyWords();
+      const today = getTodayStr();
+      const week = getWeekRange();
+      const month = getMonthRange();
+
+      document.getElementById('statTotal').textContent = words.length;
+      document.getElementById('statThisWeek').textContent = words.filter(w => isDateInRange(w.addedAt, week.start, week.end)).length;
+      document.getElementById('statThisMonth').textContent = words.filter(w => isDateInRange(w.addedAt, month.start, month.end)).length;
+      document.getElementById('statToday').textContent = words.filter(w => w.addedAt === today).length;
+    }
+
+    function queryDateRange() {
+      const start = document.getElementById('queryStartDate').value;
+      const end = document.getElementById('queryEndDate').value;
+      const resultBox = document.getElementById('queryResult');
+      if (!start || !end) {
+        alert('请选择开始和结束日期');
+        return;
+      }
+      const words = getAllStudyWords();
+      const count = words.filter(w => isDateInRange(w.addedAt, start, end)).length;
+      document.getElementById('queryResultNumber').textContent = count;
+      document.getElementById('queryResultLabel').textContent = `${start} 至 ${end} 的单词`;
+      resultBox.classList.remove('hidden');
+    }
+
+    function renderTopStatus() {
+      const total = state.total || 0;
+      const studiedPages = Object.keys(state.wordMap).length;
+      document.getElementById('pageStatus').textContent = `${studiedPages} / ${total}`;
+      document.getElementById('readingStatus').textContent = `${getTotalMediaWords()} / ${total}`;
+    }
+
+    // ============== 日程 ==============
+
+    function getSchedule() {
+      const schedule = {};
+      state.history.forEach(h => {
+        const date = h.time.split(' ')[0];
+        if (!schedule[date]) schedule[date] = [];
+        schedule[date].push(h);
+      });
+      for (const page in state.firstDrawnMap) {
+        const date = state.firstDrawnMap[page];
+        if (!schedule[date]) schedule[date] = [];
+        const exists = schedule[date].some(h => h.action === '首次背诵' && h.pages.includes(parseInt(page, 10)));
+        if (!exists) schedule[date].push({ time: date + ' 00:00:00', action: '首次背诵', pages: [parseInt(page, 10)] });
+      }
+      return schedule;
+    }
+
+    function renderSchedule() {
+      const container = document.getElementById('scheduleList');
+      if (!container) return;
+      const schedule = getSchedule();
+      const dates = Object.keys(schedule).sort((a, b) => b.localeCompare(a));
+      container.innerHTML = '';
+      if (dates.length === 0) {
+        container.innerHTML = '<div class="empty-tip">暂无背诵记录</div>';
+        return;
+      }
+      dates.forEach(date => {
+        const actions = schedule[date];
+        const dateDiv = document.createElement('div');
+        dateDiv.className = 'schedule-date';
+        dateDiv.textContent = date;
+        container.appendChild(dateDiv);
+
+        actions.forEach(a => {
+          const actionDiv = document.createElement('div');
+          actionDiv.className = 'schedule-action';
+          actionDiv.textContent = `${a.action} · ${a.pages.length} 页`;
+          container.appendChild(actionDiv);
+
+          const pagesDiv = document.createElement('div');
+          pagesDiv.className = 'schedule-pages';
+          a.pages.forEach(p => {
+            const span = document.createElement('span');
+            span.className = 'schedule-page';
+            span.textContent = `P${p}`;
+            pagesDiv.appendChild(span);
+          });
+          container.appendChild(pagesDiv);
+        });
+      });
+    }
+
+    // ============== 日历 ==============
+
+    function getDaysInMonth(year, month) {
+      return new Date(year, month + 1, 0).getDate();
+    }
+
+    function getFirstDayOfMonth(year, month) {
+      return new Date(year, month, 1).getDay();
+    }
+
+    function getDayWordCount(dateStr) {
+      const pages = [];
+      state.history.forEach(h => {
+        if (h.time.startsWith(dateStr)) pages.push(...h.pages);
+      });
+      return [...new Set(pages)].length;
+    }
+
+    function getPagesForDay(dateStr) {
+      const pages = [];
+      state.history.forEach(h => {
+        if (h.time.startsWith(dateStr)) pages.push(...h.pages);
+      });
+      return [...new Set(pages)].sort((a, b) => a - b);
+    }
+
+    function changeCalendarMonth(delta) {
+      calendarMonth += delta;
+      if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+      if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const titleEl = document.getElementById('calendarMonthTitle');
+      const gridEl = document.getElementById('calendarGrid');
+      if (!titleEl || !gridEl) return;
+      titleEl.textContent = `${calendarYear}年${calendarMonth + 1}月`;
+      gridEl.innerHTML = '';
+
+      const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+      weekdays.forEach(day => {
+        const div = document.createElement('div');
+        div.className = 'calendar-weekday';
+        div.textContent = day;
+        gridEl.appendChild(div);
+      });
+
+      const firstDay = getFirstDayOfMonth(calendarYear, calendarMonth);
+      const daysInMonth = getDaysInMonth(calendarYear, calendarMonth);
+
+      for (let i = 0; i < firstDay; i++) {
+        const div = document.createElement('div');
+        div.className = 'calendar-day empty';
+        gridEl.appendChild(div);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const count = getDayWordCount(dateStr);
+        const div = document.createElement('div');
+        div.className = 'calendar-day' + (count > 0 ? ' has-words' : '') + (selectedDay === dateStr ? ' selected' : '');
+        div.innerHTML = `<div>${day}</div>${count > 0 ? `<div class="day-count">${count}</div>` : ''}`;
+        div.onclick = () => selectDay(dateStr);
+        gridEl.appendChild(div);
+      }
+    }
+
+    function selectDay(dateStr) {
+      selectedDay = dateStr;
+      renderCalendar();
+      const detail = document.getElementById('selectedDayDetail');
+      const title = document.getElementById('selectedDayTitle');
+      const pagesEl = document.getElementById('selectedDayPages');
+      const pages = getPagesForDay(dateStr);
+      if (pages.length === 0) {
+        detail.classList.add('hidden');
+        return;
+      }
+      title.textContent = `${dateStr} 背诵了 ${pages.length} 页`;
+      pagesEl.innerHTML = '';
+      pages.forEach(p => {
+        const span = document.createElement('span');
+        span.className = 'selected-page-tag';
+        span.textContent = `第 ${p} 页`;
+        pagesEl.appendChild(span);
+      });
+      detail.classList.remove('hidden');
+    }
+
+    // ============== 复习池选择 ==============
+
+    function renderReviewPoolSelect() {
       const select = document.getElementById('reviewPoolSelect');
-      const poolName = select.value;
-      if (!poolName) {
-        alert('当前没有可复习的页码');
-        return;
-      }
-
-      const input = document.getElementById('reviewDrawCount');
-      const count = parseInt(input.value);
-      if (isNaN(count) || count <= 0) {
-        alert('请输入有效的抽取数量');
-        return;
-      }
-
-      const pool = state.reviewPools[poolName];
-      if (!pool || pool.length === 0) {
-        alert('该复习单词池已空');
-        return;
-      }
-
-      const drawn = drawFromPool(pool, count);
-      lastReviewDraw = { poolName, drawn };
-
-      document.getElementById('reviewResult').classList.remove('hidden');
-      document.getElementById('reviewResultTitle').textContent = `从复习单词池 ${poolName} 抽取`;
-      renderPageList('reviewResultList', drawn, false);
-      document.getElementById('moveNextBtn').style.display = 'block';
+      if (!select) return;
+      const pools = ['review1', 'review2', 'review3'];
+      const current = select.value;
+      select.innerHTML = '';
+      pools.forEach(name => {
+        const count = (state.reviewPools[name] || []).length;
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = `${name === 'review1' ? '复习池 1' : name === 'review2' ? '复习池 2' : '复习池 3'} (${count} 页)`;
+        select.appendChild(option);
+      });
+      if (current && [...select.options].some(o => o.value === current)) select.value = current;
     }
 
-    function moveToNextPool() {
-      if (!lastReviewDraw) return;
-      const { poolName, drawn } = lastReviewDraw;
-      state.reviewPools[poolName] = removePages(state.reviewPools[poolName], drawn);
-      const nextName = String(parseInt(poolName) + 1);
-      addToPool(nextName, drawn);
-      logAction(`复习单词池 ${poolName} 完成，移入复习单词池 ${nextName}`, drawn);
-      saveState();
-
-      alert(`已移入复习单词池 ${nextName}`);
-      document.getElementById('reviewResult').classList.add('hidden');
-      lastReviewDraw = null;
-      renderAll();
-    }
-
-    function initFromInput() {
-      const total = parseInt(document.getElementById('totalPages').value);
-      if (isNaN(total) || total < 1) {
-        alert('请输入有效的总页数');
-        return;
-      }
-      if (confirm(`确定要重置吗？当前进度会清空，总页数设为 ${total}。`)) {
-        state = initState(total);
-        saveState();
-        lastDrawnNew = null;
-        lastReviewDraw = null;
-        lastTodayPages = null;
-        document.getElementById('newResult').classList.add('hidden');
-        document.getElementById('reviewResult').classList.add('hidden');
-        document.getElementById('todayResult').classList.add('hidden');
-        renderAll();
-      }
-    }
+    // ============== 数据备份 ==============
 
     function exportData() {
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const dataStr = JSON.stringify(state, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = '背单词状态备份.json';
+      a.download = `word-learning-backup-${getTodayStr()}.json`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -1958,44 +1812,54 @@
       const file = input.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = (e) => {
         try {
           const data = JSON.parse(e.target.result);
-          if (data.newPool && data.reviewPools) {
-            state = migrateState(data);
-            saveState();
-            lastDrawnNew = null;
-            lastReviewDraw = null;
-            lastTodayPages = null;
-            document.getElementById('newResult').classList.add('hidden');
-            document.getElementById('reviewResult').classList.add('hidden');
-            document.getElementById('todayResult').classList.add('hidden');
-            renderAll();
-            alert('备份导入成功');
-          } else {
-            alert('备份文件格式不正确');
-          }
+          state = migrateState(data);
+          saveState();
+          renderAll();
+          alert('导入成功');
         } catch (err) {
-          alert('读取备份失败');
+          alert('导入失败：' + err.message);
         }
       };
       reader.readAsText(file);
-      input.value = '';
     }
 
-    // 初始化
-    state = loadState();
-    if (!state.wordMap) state.wordMap = {};
-    if (!state.firstDrawnMap) state.firstDrawnMap = {};
+    // ============== 全局渲染 ==============
 
-    // 设置默认查询日期为本月
-    const todayForQuery = new Date();
-    const firstDayOfMonth = new Date(todayForQuery.getFullYear(), todayForQuery.getMonth(), 1);
-    const lastDayOfMonth = new Date(todayForQuery.getFullYear(), todayForQuery.getMonth() + 1, 0);
-    document.getElementById('queryStartDate').value = formatDate(firstDayOfMonth);
-    document.getElementById('queryEndDate').value = formatDate(lastDayOfMonth);
+    function renderAll() {
+      renderTopStatus();
+      renderCalendar();
+      renderReviewPoolSelect();
+      renderWordBook();
+      renderMediaVocab();
+      renderStats();
+      renderSchedule();
+      renderDictionaryInfo();
+      renderFullDictInfo();
+      if (lastDrawnNew) {
+        document.getElementById('newResult').classList.remove('hidden');
+        renderPageList('newResultList', lastDrawnNew);
+      }
+      if (lastReviewDraw) {
+        document.getElementById('reviewResult').classList.remove('hidden');
+        document.getElementById('reviewResultTitle').textContent = `${lastReviewDraw.poolName === 'review1' ? '复习池 1' : lastReviewDraw.poolName === 'review2' ? '复习池 2' : '复习池 3'} 复习内容`;
+        renderPageList('reviewResultList', lastReviewDraw.drawn);
+      }
+      if (lastTodayPages) {
+        document.getElementById('todayResult').classList.remove('hidden');
+        renderPageList('todayResultList', lastTodayPages, true);
+      }
+    }
 
-    renderAll();
+    function init() {
+      state = loadState();
+      document.getElementById('totalPages').value = state.total;
+      renderAll();
+    }
+
+    init();
   </script>
 </body>
 </html>
