@@ -267,6 +267,116 @@
       border-radius: 12px;
       font-size: 12px;
     }
+    .media-source-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .media-source-card {
+      background: #f9f9f9;
+      border-radius: 12px;
+      border: 1px solid #e5e5e5;
+      overflow: hidden;
+    }
+    .media-source-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .media-source-title {
+      font-weight: 600;
+      color: #333;
+    }
+    .media-source-meta {
+      font-size: 12px;
+      color: #999;
+      margin-top: 2px;
+    }
+    .media-source-body {
+      padding: 12px;
+      border-top: 1px solid #eee;
+    }
+    .media-entry-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .media-entry-card {
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #e5e5e5;
+    }
+    .media-entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+    .media-entry-date {
+      font-weight: 600;
+      color: #555;
+    }
+    .media-entry-note {
+      font-size: 13px;
+      color: #007aff;
+      margin-left: 8px;
+    }
+    .media-entry-body {
+      padding: 12px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .media-word-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 8px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .media-word-item:last-child {
+      border-bottom: none;
+    }
+    .media-word-text {
+      font-weight: 600;
+      color: #333;
+    }
+    .media-word-phonetic {
+      font-size: 13px;
+      color: #666;
+      margin-left: 6px;
+    }
+    .media-word-meaning {
+      font-size: 13px;
+      color: #666;
+      margin-top: 2px;
+    }
+    .media-word-delete {
+      font-size: 12px;
+      color: #ff3b30;
+      cursor: pointer;
+      padding: 2px 6px;
+    }
+    .media-add-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .media-add-row input, .media-add-row select {
+      flex: 1;
+      min-width: 80px;
+      margin: 0;
+    }
+    .media-add-row button {
+      width: auto;
+      padding: 10px 14px;
+      margin: 0;
+      flex: 0 0 auto;
+    }
     .loading {
       font-size: 12px;
       color: #007aff;
@@ -492,6 +602,22 @@
   </div>
 
   <div class="card">
+    <div class="card-title">影视阅读单词本</div>
+    <div class="tip">按电影、电视剧、书籍分类记录生词，没填的类目不会显示</div>
+    <div class="media-add-row" style="margin-bottom:12px;">
+      <select id="mediaTypeInput">
+        <option value="movie">电影</option>
+        <option value="tv">电视剧</option>
+        <option value="book">书籍</option>
+        <option value="other">其他</option>
+      </select>
+      <input type="text" id="mediaTitleInput" placeholder="名称，例如：哈利波特">
+      <button class="btn-primary" onclick="addMediaSource()">添加</button>
+    </div>
+    <div id="mediaVocabList"></div>
+  </div>
+
+  <div class="card">
     <div class="card-title">单词统计</div>
     <div class="stats-grid">
       <div class="stat-card">
@@ -580,7 +706,7 @@
     let lastDrawnNew = null;
     let lastTodayPages = null;
 
-    const DATA_VERSION = 5;
+    const DATA_VERSION = 6;
 
     function initState(total = 634) {
       return {
@@ -591,7 +717,8 @@
         wordMap: {},
         firstDrawnMap: {},
         history: [],
-        dictionary: {}
+        dictionary: {},
+        mediaVocab: []
       };
     }
 
@@ -605,6 +732,7 @@
       if (!data.firstDrawnMap) data.firstDrawnMap = {};
       if (!data.history) data.history = [];
       if (!data.dictionary) data.dictionary = {};
+      if (!data.mediaVocab) data.mediaVocab = [];
       // 兼容旧版 wordMap（字符串数组转成对象数组，补上 addedAt）
       for (const page in data.wordMap) {
         const defaultDate = data.firstDrawnMap[page] || getTodayStr();
@@ -1041,6 +1169,226 @@
       }
     }
 
+    // ============== 影视阅读单词本 ==============
+
+    const MEDIA_TYPE_LABELS = {
+      movie: '电影',
+      tv: '电视剧',
+      book: '书籍',
+      other: '其他'
+    };
+
+    function generateId() {
+      return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    }
+
+    function addMediaSource() {
+      const typeInput = document.getElementById('mediaTypeInput');
+      const titleInput = document.getElementById('mediaTitleInput');
+      const type = typeInput ? typeInput.value : 'book';
+      const title = titleInput ? titleInput.value.trim() : '';
+      if (!title) {
+        alert('请输入名称');
+        return;
+      }
+      state.mediaVocab.push({
+        id: generateId(),
+        type,
+        title,
+        createdAt: getTodayStr(),
+        entries: []
+      });
+      if (titleInput) titleInput.value = '';
+      saveState();
+      renderMediaVocab();
+    }
+
+    function deleteMediaSource(id) {
+      if (!confirm('确定删除这个来源吗？下面的所有记录都会删掉。')) return;
+      state.mediaVocab = state.mediaVocab.filter(s => s.id !== id);
+      saveState();
+      renderMediaVocab();
+    }
+
+    function addMediaEntry(sourceId) {
+      const dateInput = document.getElementById(`media-entry-date-${sourceId}`);
+      const noteInput = document.getElementById(`media-entry-note-${sourceId}`);
+      const date = dateInput ? dateInput.value : getTodayStr();
+      const note = noteInput ? noteInput.value.trim() : '';
+      if (!date) {
+        alert('请选择日期');
+        return;
+      }
+      const source = state.mediaVocab.find(s => s.id === sourceId);
+      if (!source) return;
+      source.entries.push({
+        id: generateId(),
+        date,
+        note,
+        words: []
+      });
+      if (dateInput) dateInput.value = getTodayStr();
+      if (noteInput) noteInput.value = '';
+      saveState();
+      renderMediaVocab();
+    }
+
+    function deleteMediaEntry(sourceId, entryId) {
+      if (!confirm('确定删除这条记录吗？')) return;
+      const source = state.mediaVocab.find(s => s.id === sourceId);
+      if (!source) return;
+      source.entries = source.entries.filter(e => e.id !== entryId);
+      saveState();
+      renderMediaVocab();
+    }
+
+    async function addMediaWord(sourceId, entryId) {
+      const wordInput = document.getElementById(`media-word-${sourceId}-${entryId}`);
+      const phoneticInput = document.getElementById(`media-phonetic-${sourceId}-${entryId}`);
+      const meaningInput = document.getElementById(`media-meaning-${sourceId}-${entryId}`);
+      if (!wordInput) return;
+      const word = wordInput.value.trim();
+      if (!word) return;
+
+      let phonetic = phoneticInput ? phoneticInput.value.trim() : '';
+      let meaning = meaningInput ? meaningInput.value.trim() : '';
+
+      const source = state.mediaVocab.find(s => s.id === sourceId);
+      if (!source) return;
+      const entry = source.entries.find(e => e.id === entryId);
+      if (!entry) return;
+
+      // 先保存
+      entry.words.push({
+        word,
+        phonetic,
+        meaning,
+        addedAt: getTodayStr()
+      });
+
+      wordInput.value = '';
+      if (phoneticInput) phoneticInput.value = '';
+      if (meaningInput) meaningInput.value = '';
+      saveState();
+      renderMediaVocab();
+
+      // 没填音标释义的话自动补全
+      if (!phonetic || !meaning) {
+        const info = await resolveWordInfo(word);
+        if (info && (info.phonetic || info.meaning)) {
+          const target = entry.words.find(w => w.word.toLowerCase() === word.toLowerCase());
+          if (target) {
+            if (!target.phonetic) target.phonetic = info.phonetic;
+            if (!target.meaning) target.meaning = info.meaning;
+            saveState();
+            renderMediaVocab();
+          }
+        }
+      }
+    }
+
+    function deleteMediaWord(sourceId, entryId, word) {
+      if (!confirm(`确定删除单词 "${word}" 吗？`)) return;
+      const source = state.mediaVocab.find(s => s.id === sourceId);
+      if (!source) return;
+      const entry = source.entries.find(e => e.id === entryId);
+      if (!entry) return;
+      entry.words = entry.words.filter(w => w.word.toLowerCase() !== word.toLowerCase());
+      saveState();
+      renderMediaVocab();
+    }
+
+    function toggleMediaSource(id) {
+      const body = document.getElementById(`media-source-body-${id}`);
+      if (body) body.classList.toggle('hidden');
+    }
+
+    function toggleMediaEntry(sourceId, entryId) {
+      const body = document.getElementById(`media-entry-body-${sourceId}-${entryId}`);
+      if (body) body.classList.toggle('hidden');
+    }
+
+    function getMediaWordCount(source) {
+      return source.entries.reduce((sum, e) => sum + e.words.length, 0);
+    }
+
+    function renderMediaVocab() {
+      const container = document.getElementById('mediaVocabList');
+      if (!container) return;
+      if (state.mediaVocab.length === 0) {
+        container.innerHTML = '<div class="empty-tip">还没有添加任何书籍或电影</div>';
+        return;
+      }
+      container.innerHTML = state.mediaVocab.map(source => {
+        const wordCount = getMediaWordCount(source);
+        return `
+        <div class="media-source-card">
+          <div class="media-source-header" onclick="toggleMediaSource('${source.id}')">
+            <div>
+              <div class="media-source-title">${escapeHtml(source.title)}</div>
+              <div class="media-source-meta">${MEDIA_TYPE_LABELS[source.type] || source.type} · ${wordCount} 个单词 · ${source.entries.length} 条记录</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="click-hint">点击展开</span>
+              <span class="media-word-delete" onclick="event.stopPropagation(); deleteMediaSource('${source.id}')">删除</span>
+            </div>
+          </div>
+          <div class="media-source-body hidden" id="media-source-body-${source.id}">
+            <div class="media-add-row">
+              <input type="date" id="media-entry-date-${source.id}" value="${getTodayStr()}">
+              <input type="text" id="media-entry-note-${source.id}" placeholder="第几集/第几章">
+              <button class="btn-primary" onclick="addMediaEntry('${source.id}')">添加记录</button>
+            </div>
+            <div class="media-entry-list" style="margin-top:12px;">
+              ${source.entries.length === 0 ? '<div class="empty-tip">暂无记录</div>' : source.entries.map(entry => `
+                <div class="media-entry-card">
+                  <div class="media-entry-header" onclick="toggleMediaEntry('${source.id}', '${entry.id}')">
+                    <div>
+                      <span class="media-entry-date">${entry.date}</span>
+                      ${entry.note ? `<span class="media-entry-note">${escapeHtml(entry.note)}</span>` : ''}
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span class="word-count">${entry.words.length} 个单词</span>
+                      <span class="click-hint">点击展开</span>
+                      <span class="media-word-delete" onclick="event.stopPropagation(); deleteMediaEntry('${source.id}', '${entry.id}')">删除</span>
+                    </div>
+                  </div>
+                  <div class="media-entry-body hidden" id="media-entry-body-${source.id}-${entry.id}">
+                    ${entry.words.length === 0 ? '<div class="empty-tip">暂无单词</div>' : entry.words.map(w => `
+                      <div class="media-word-item">
+                        <div>
+                          <span class="media-word-text">${escapeHtml(w.word)}</span>
+                          ${w.phonetic ? `<span class="media-word-phonetic">${escapeHtml(w.phonetic)}</span>` : ''}
+                          ${w.meaning ? `<div class="media-word-meaning">${escapeHtml(w.meaning)}</div>` : ''}
+                        </div>
+                        <span class="media-word-delete" onclick="deleteMediaWord('${source.id}', '${entry.id}', '${escapeHtml(w.word).replace(/'/g, "\\'")}')">删除</span>
+                      </div>
+                    `).join('')}
+                    <div class="media-add-row" style="margin-top:10px;">
+                      <input type="text" id="media-word-${source.id}-${entry.id}" placeholder="单词" class="word-input">
+                      <input type="text" id="media-phonetic-${source.id}-${entry.id}" placeholder="音标">
+                      <input type="text" id="media-meaning-${source.id}-${entry.id}" placeholder="释义">
+                      <button class="btn-add-word" onclick="addMediaWord('${source.id}', '${entry.id}')">添加</button>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     async function addWordsFromInput(page) {
       const wordInput = document.getElementById(`word-input-${page}`);
       const phoneticInput = document.getElementById(`phonetic-input-${page}`);
@@ -1457,6 +1805,7 @@
     function renderAll() {
       renderStatus();
       renderWordBook();
+      renderMediaVocab();
       renderSchedule();
       renderStats();
       renderCalendar();
